@@ -30,7 +30,31 @@ The AADF Smart Procurement Platform is designed to automate and digitize the end
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18.x or later
+- npm or yarn package manager
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/hackathon1_aadf.git
+cd hackathon1_aadf/procurement-platform
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### Running the Application
+
+1. Start the development server:
 
 ```bash
 npm run dev
@@ -38,7 +62,33 @@ npm run dev
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+### Available Pages
+
+- **Home**: [http://localhost:3000](http://localhost:3000)
+- **Tenders**: [http://localhost:3000/tenders](http://localhost:3000/tenders)
+- **Submit Proposal**: [http://localhost:3000/submit-proposal](http://localhost:3000/submit-proposal)
+- **Login**: [http://localhost:3000/login](http://localhost:3000/login)
+- **Dashboard** (after login): [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
+
+### Building for Production
+
+To build the application for production:
+
+```bash
+npm run build
+# or
+yarn build
+```
+
+Then, you can start the production server:
+
+```bash
+npm start
+# or
+yarn start
+```
 
 ## Project Structure
 
@@ -59,6 +109,24 @@ The platform supports the following workflow:
 5. Winner Announcement
 6. Documenting processes and decisions
 
+## Application Screenshots
+
+### Homepage
+The homepage provides an overview of the platform's features and benefits.
+
+### Tenders Page
+The tenders page displays all active procurement opportunities with filtering options.
+
+### Proposal Submission
+Vendors can submit detailed proposals through a comprehensive form.
+
+### Dashboard
+Authenticated users can manage tenders, evaluate proposals, and generate reports.
+
 ## Hackathon Challenge
 
 This project was developed as part of the Junction Hackathon Tirana challenge by the Albanian-American Development Foundation (AADF).
+
+## License
+
+MIT
