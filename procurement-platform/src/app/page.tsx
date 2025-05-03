@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SimpleAnimation from "./components/SimpleAnimation";
 
 export default function Home() {
   return (
@@ -8,23 +9,23 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col md:flex-row items-start justify-between">
           {/* Left side - Text and buttons */}
           <div className="md:w-1/2 mb-10 md:mb-0 md:pr-8 flex flex-col items-start">
-            <h1 className="text-4xl font-bold mb-6">
+            <h1 className="text-4xl font-bold mb-6 fade-in">
               A Digital Solution for AADF's Procurement Process
             </h1>
-            <p className="text-lg text-white mb-6 max-w-xl">
+            <p className="text-lg text-white mb-6 max-w-xl fade-in delay-100">
               Streamlining the end-to-end procurement workflow with
               transparency, compliance, and efficiency at its core.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 fade-in delay-200">
               <Link
                 href="/procurement"
-                className="px-6 py-3 rounded-md bg-white text-[#0056a4] hover:bg-gray-100 transition-colors font-medium"
+                className="px-6 py-3 rounded-md bg-white text-[#0056a4] hover:bg-gray-100 transition-colors font-medium hover-scale btn-pulse"
               >
                 View Tenders
               </Link>
               <Link
                 href="/procurement/1/submit"
-                className="px-6 py-3 rounded-md border border-white text-white hover:bg-[#0067c5] transition-colors font-medium"
+                className="px-6 py-3 rounded-md border border-white text-white hover:bg-[#0067c5] transition-colors font-medium hover-scale btn-pulse"
               >
                 Submit a Proposal
               </Link>
@@ -32,8 +33,8 @@ export default function Home() {
           </div>
 
           {/* Right side - Login card */}
-          <div className="md:w-1/3">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="md:w-1/3 fade-in-left delay-300">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover-shadow">
               <div className="p-6">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-[#0056a4] rounded-full flex items-center justify-center text-white">
@@ -52,7 +53,7 @@ export default function Home() {
                 </p>
                 <Link
                   href="/login"
-                  className="w-full block text-center px-4 py-2 rounded-md bg-[#0056a4] text-white hover:bg-[#004483] transition-colors font-medium"
+                  className="w-full block text-center px-4 py-2 rounded-md bg-[#0056a4] text-white hover:bg-[#004483] transition-colors font-medium hover-scale btn-pulse"
                 >
                   Log In
                 </Link>
@@ -70,7 +71,7 @@ export default function Home() {
       {/* Main Content Section */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 fade-in">
             <h2 className="text-3xl font-bold text-[#0056a4] mb-4 inline-block relative">
               AADF Smart Procurement
               <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-[#0056a4]"></span>
@@ -83,7 +84,7 @@ export default function Home() {
 
           {/* Features */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+            <SimpleAnimation animation="fade-in-up" delay="delay-100" className="bg-white p-8 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300 hover-scale">
               <div className="flex justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#0056a4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -93,9 +94,9 @@ export default function Home() {
               <p className="text-gray-600">
                 Our platform ensures complete transparency in the procurement process, from tender publication to winner selection.
               </p>
-            </div>
+            </SimpleAnimation>
 
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+            <SimpleAnimation animation="fade-in-up" delay="delay-200" className="bg-white p-8 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300 hover-scale">
               <div className="flex justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#0056a4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -105,9 +106,9 @@ export default function Home() {
               <p className="text-gray-600">
                 Replacing paper-heavy processes with digital workflows that save time and reduce errors.
               </p>
-            </div>
+            </SimpleAnimation>
 
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+            <SimpleAnimation animation="fade-in-up" delay="delay-300" className="bg-white p-8 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300 hover-scale">
               <div className="flex justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#0056a4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -117,7 +118,7 @@ export default function Home() {
               <p className="text-gray-600">
                 Advanced AI tools to analyze proposals, detect missing information, and suggest evaluation scores.
               </p>
-            </div>
+            </SimpleAnimation>
           </div>
         </div>
       </section>
@@ -125,7 +126,7 @@ export default function Home() {
       {/* Smart Procurement Platform Section - Added for Hackathon */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 fade-in">
             <h2 className="text-3xl font-bold text-[#0056a4] mb-4 inline-block relative">
               Smart Procurement Platform
               <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-[#0056a4]"></span>
@@ -136,8 +137,8 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <div className="fade-in-right delay-100">
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 hover-scale">
                 <div className="p-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
                 <div className="p-8">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">The Challenge</h3>
@@ -148,16 +149,16 @@ export default function Home() {
                     procurement process while ensuring transparency, compliance, and efficiency.
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover-scale">
                       Transparency
                     </span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover-scale">
                       Efficiency
                     </span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover-scale">
                       Compliance
                     </span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover-scale">
                       Automation
                     </span>
                   </div>
@@ -165,8 +166,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div>
-              <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <div className="fade-in-left delay-200">
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 hover-scale">
                 <div className="p-1 bg-gradient-to-r from-green-500 to-teal-600"></div>
                 <div className="p-8">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Solution</h3>
@@ -176,25 +177,25 @@ export default function Home() {
                     transparency throughout the entire process.
                   </p>
                   <ul className="space-y-3">
-                    <li className="flex items-start">
+                    <li className="flex items-start fade-in delay-100">
                       <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                       </svg>
                       <span className="text-gray-700">AI-powered proposal analysis and scoring suggestions</span>
                     </li>
-                    <li className="flex items-start">
+                    <li className="flex items-start fade-in delay-200">
                       <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                       </svg>
                       <span className="text-gray-700">Automatic detection of missing information in proposals</span>
                     </li>
-                    <li className="flex items-start">
+                    <li className="flex items-start fade-in delay-300">
                       <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                       </svg>
                       <span className="text-gray-700">Digital workflow for the entire procurement process</span>
                     </li>
-                    <li className="flex items-start">
+                    <li className="flex items-start fade-in delay-400">
                       <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                       </svg>
@@ -206,12 +207,12 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-16">
+          <div className="mt-16 fade-in-up delay-300">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
               <div className="p-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                  <div className="text-center">
+                  <div className="text-center fade-in-up delay-100 hover-scale">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-2xl font-bold text-blue-600">1</span>
                     </div>
@@ -220,7 +221,7 @@ export default function Home() {
                       AADF staff create and publish tenders with detailed requirements and evaluation criteria
                     </p>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center fade-in-up delay-200 hover-scale">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-2xl font-bold text-blue-600">2</span>
                     </div>
@@ -229,7 +230,7 @@ export default function Home() {
                       Vendors submit proposals through the platform with all required documentation
                     </p>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center fade-in-up delay-300 hover-scale">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-2xl font-bold text-blue-600">3</span>
                     </div>
@@ -238,7 +239,7 @@ export default function Home() {
                       Our AI analyzes proposals, detects missing information, and suggests evaluation scores
                     </p>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center fade-in-up delay-400 hover-scale">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-2xl font-bold text-blue-600">4</span>
                     </div>
@@ -252,10 +253,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-12 text-center">
+          <div className="mt-12 text-center fade-in delay-500">
             <Link
               href="/dashboard"
-              className="inline-block px-8 py-3 rounded-md bg-[#0056a4] text-white hover:bg-[#004483] transition-colors font-medium"
+              className="inline-block px-8 py-3 rounded-md bg-[#0056a4] text-white hover:bg-[#004483] transition-colors font-medium hover-scale btn-pulse"
             >
               Explore the Platform
             </Link>
