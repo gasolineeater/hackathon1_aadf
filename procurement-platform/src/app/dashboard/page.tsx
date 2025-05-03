@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import AnalyticsSummarySection from '@/app/components/dashboard/AnalyticsSummarySection';
+import RecentActivitySection from '@/app/components/dashboard/RecentActivitySection';
+import AIInsightsSection from '@/app/components/dashboard/AIInsightsSection';
+import TopVendorsSection from '@/app/components/dashboard/TopVendorsSection';
 
 // Mock data for dashboard
 const recentTenders = [
@@ -54,6 +60,22 @@ const pendingEvaluations = [
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [userRole, setUserRole] = useState('user');
+  const { user } = useAuth();
+  const { isAdmin, isEvaluator, isVendor } = useRoleAccess();
+
+  useEffect(() => {
+    // Set user role based on role access
+    if (isAdmin) {
+      setUserRole('admin');
+    } else if (isEvaluator) {
+      setUserRole('evaluator');
+    } else if (isVendor) {
+      setUserRole('vendor');
+    } else {
+      setUserRole('user');
+    }
+  }, [isAdmin, isEvaluator, isVendor]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -110,6 +132,16 @@ export default function DashboardPage() {
             </button>
             <button
               className={`${
+                activeTab === 'ai_analysis'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              onClick={() => setActiveTab('ai_analysis')}
+            >
+              AI Analysis
+            </button>
+            <button
+              className={`${
                 activeTab === 'evaluations'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -145,206 +177,86 @@ export default function DashboardPage() {
       {/* Dashboard Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Active Tenders</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">3</dd>
-                  </dl>
-                </div>
-              </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Pending Evaluations</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">5</dd>
-                  </dl>
-                </div>
-              </div>
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Completed Tenders</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">12</dd>
-                  </dl>
-                </div>
-              </div>
+          <div className="space-y-8">
+            {/* Analytics Summary Section */}
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Analytics Summary</h2>
+              <AnalyticsSummarySection userRole={userRole} />
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Activity</h3>
-              </div>
-              <div className="px-4 py-5 sm:p-6">
-                <ul className="divide-y divide-gray-200">
-                  <li className="py-3">
-                    <div className="flex space-x-3">
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium">New proposal submitted</h3>
-                          <p className="text-sm text-gray-500">2h ago</p>
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          Digital Systems Inc submitted a proposal for IT Equipment Procurement
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li className="py-3">
-                    <div className="flex space-x-3">
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium">Tender published</h3>
-                          <p className="text-sm text-gray-500">1d ago</p>
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          Office Renovation Services tender was published
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                  <li className="py-3">
-                    <div className="flex space-x-3">
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium">Evaluation completed</h3>
-                          <p className="text-sm text-gray-500">2d ago</p>
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          Training and Development Program evaluation was completed
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Recent Activity Section */}
+              <RecentActivitySection userRole={userRole} limit={5} />
+
+              {/* AI Insights Section */}
+              <AIInsightsSection userRole={userRole} limit={5} />
             </div>
 
-            {/* Recent Tenders */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Tenders</h3>
-              </div>
-              <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Title
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Status
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Proposals
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Deadline
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {recentTenders.map((tender) => (
-                      <tr key={tender.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                          <Link href={`/tenders/${tender.id}`}>{tender.title}</Link>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            {tender.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tender.proposals}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tender.deadline}</td>
+            {/* Top Vendors Section - Only show for admin/evaluator */}
+            {(isAdmin || isEvaluator) && (
+              <TopVendorsSection limit={5} />
+            )}
+
+            {/* Recent Tenders - Keep for backward compatibility */}
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Tenders</h2>
+              <div className="bg-white shadow rounded-lg">
+                <div className="overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Title
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Status
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Proposals
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Deadline
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="px-4 py-3 border-t border-gray-200 text-right">
-                <Link
-                  href="/tenders"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                >
-                  View all tenders &rarr;
-                </Link>
-              </div>
-            </div>
-
-            {/* Pending Evaluations */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Pending Evaluations</h3>
-              </div>
-              <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Tender
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Vendor
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Submitted
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {pendingEvaluations.map((evaluation) => (
-                      <tr key={evaluation.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{evaluation.tender}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{evaluation.vendor}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{evaluation.submittedDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                            {evaluation.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="px-4 py-3 border-t border-gray-200 text-right">
-                <Link
-                  href="/evaluations"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                >
-                  View all evaluations &rarr;
-                </Link>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {recentTenders.map((tender) => (
+                        <tr key={tender.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                            <Link href={`/tenders/${tender.id}`}>{tender.title}</Link>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              {tender.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tender.proposals}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tender.deadline}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-4 py-3 border-t border-gray-200 text-right">
+                  <Link
+                    href="/tenders"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                  >
+                    View all tenders &rarr;
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -358,6 +270,94 @@ export default function DashboardPage() {
             <div className="px-4 py-5 sm:p-6">
               <p className="text-gray-500">Tenders content will be displayed here.</p>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'ai_analysis' && (
+          <div className="space-y-8">
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">AI Analysis Dashboard</h3>
+              </div>
+              <div className="px-4 py-5 sm:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div className="p-6">
+                      <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-blue-100">
+                        <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="mb-2 text-xl font-bold text-gray-900">Tender Evaluation</h3>
+                      <p className="mb-4 text-gray-600">
+                        AI-powered evaluation of tender documents for quality, completeness, and compliance.
+                      </p>
+                      <Link
+                        href="/tenders"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                      >
+                        View Tenders
+                        <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div className="p-6">
+                      <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-purple-100">
+                        <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="mb-2 text-xl font-bold text-gray-900">Vendor Matching</h3>
+                      <p className="mb-4 text-gray-600">
+                        AI-powered matching of vendors to tenders based on compatibility and expertise.
+                      </p>
+                      <Link
+                        href="/vendors"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                      >
+                        View Vendors
+                        <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div className="p-6">
+                      <div className="flex items-center justify-center w-12 h-12 mb-4 rounded-full bg-green-100">
+                        <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <h3 className="mb-2 text-xl font-bold text-gray-900">Proposal Analysis</h3>
+                      <p className="mb-4 text-gray-600">
+                        AI-powered analysis of proposals for compliance, quality, and alignment with tender requirements.
+                      </p>
+                      <Link
+                        href="/proposals"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                      >
+                        View Proposals
+                        <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Insights Section */}
+            <AIInsightsSection userRole={userRole} limit={10} />
+
+            {/* Recent Activity Section - AI-related only */}
+            <RecentActivitySection userRole={userRole} limit={5} />
           </div>
         )}
 
