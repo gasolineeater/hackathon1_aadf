@@ -7,7 +7,7 @@ const tenders = [
     title: 'Executive Design of Urban Trails in Tirana',
     reference: '#00189',
     description: 'Design architectural and engineering studio to deliver the executive design for the Urban Trails Tirana Project.',
-    fullDescription: 'Albanian-American Development Foundation is inviting qualified companies to apply for developing the executive design for the Urban Trails of Tirana. An integrated trail system driving Tirana's sustainable future, preserving the environment. The objective of the request is to identify a design architectural and engineering studio to deliver the executive design for the Urban Trails Tirana Project. The project aims to build green paths and trails that link the Grand Park of Tirana with Farka Park and the Dry Lake neighborhood, to enhance eco-tourism, sustainability mobility, and recreation. Space and cost optimization for cyclists and pedestrians is prioritized, fostering feasibility and encouraging diverse usage patterns.',
+    fullDescription: "Albanian-American Development Foundation is inviting qualified companies to apply for developing the executive design for the Urban Trails of Tirana. An integrated trail system driving Tirana's sustainable future, preserving the environment. The objective of the request is to identify a design architectural and engineering studio to deliver the executive design for the Urban Trails Tirana Project. The project aims to build green paths and trails that link the Grand Park of Tirana with Farka Park and the Dry Lake neighborhood, to enhance eco-tourism, sustainability mobility, and recreation. Space and cost optimization for cyclists and pedestrians is prioritized, fostering feasibility and encouraging diverse usage patterns.",
     deadline: '2025-03-17',
     deadlineTime: '10:00AM',
     status: 'Active',
@@ -146,7 +146,7 @@ export default function TenderDetailPage({ params }: { params: { id: string } })
                 <p className="text-gray-700 mb-4">
                   Register to download the documentation and submit your proposal for this tender.
                 </p>
-                <Link 
+                <Link
                   href={`/procurement/${tender.id}/submit`}
                   className="inline-block px-6 py-3 bg-[#0056a4] text-white font-medium rounded-md hover:bg-[#004483] transition-colors"
                 >
