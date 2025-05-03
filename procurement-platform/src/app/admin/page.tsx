@@ -170,6 +170,23 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          <Link
+            href="/admin/real-time"
+            className="bg-white overflow-hidden shadow rounded-lg p-6 hover:bg-gray-50"
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0 bg-[#0056a4] rounded-md p-3">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900">Real-time Updates</h3>
+                <p className="mt-1 text-sm text-gray-500">Monitor and test real-time updates</p>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
 

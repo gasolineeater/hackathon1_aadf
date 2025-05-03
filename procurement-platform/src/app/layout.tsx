@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import { ToastProvider } from "./context/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { RealTimeProvider } from "@/contexts/RealTimeContext";
 import NotificationPermission from "./components/NotificationPermission";
 import JudgeHelper from "./components/JudgeHelper";
 
@@ -50,11 +51,13 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <NotificationProvider>
-              <Navbar />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-              <JudgeHelper />
-              <NotificationPermission />
+              <RealTimeProvider>
+                <Navbar />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+                <JudgeHelper />
+                <NotificationPermission />
+              </RealTimeProvider>
             </NotificationProvider>
           </ToastProvider>
         </AuthProvider>

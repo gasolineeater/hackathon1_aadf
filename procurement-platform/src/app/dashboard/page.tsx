@@ -8,6 +8,8 @@ import AnalyticsSummarySection from '@/app/components/dashboard/AnalyticsSummary
 import RecentActivitySection from '@/app/components/dashboard/RecentActivitySection';
 import AIInsightsSection from '@/app/components/dashboard/AIInsightsSection';
 import TopVendorsSection from '@/app/components/dashboard/TopVendorsSection';
+import RealTimeFeed from '@/app/components/RealTimeFeed';
+import RealTimeStatus from '@/app/components/RealTimeStatus';
 
 // Mock data for dashboard
 const recentTenders = [
@@ -159,6 +161,16 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('reports')}
             >
               Reports
+            </button>
+            <button
+              className={`${
+                activeTab === 'real_time'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              onClick={() => setActiveTab('real_time')}
+            >
+              Real-time
             </button>
             <button
               className={`${
@@ -439,6 +451,41 @@ export default function DashboardPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'real_time' && (
+          <div className="space-y-8">
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Real-time Updates</h3>
+                  <RealTimeStatus />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  Monitor real-time updates across the platform
+                </p>
+              </div>
+              <div className="px-4 py-5 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Tender Updates</h4>
+                    <RealTimeFeed maxItems={5} filterType="tender" className="mb-6" />
+
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Proposal Updates</h4>
+                    <RealTimeFeed maxItems={5} filterType="proposal" />
+                  </div>
+
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Document Updates</h4>
+                    <RealTimeFeed maxItems={5} filterType="document" className="mb-6" />
+
+                    <h4 className="text-md font-medium text-gray-900 mb-4">System Updates</h4>
+                    <RealTimeFeed maxItems={5} filterType="system" />
                   </div>
                 </div>
               </div>
