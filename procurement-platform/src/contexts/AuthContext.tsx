@@ -14,8 +14,6 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any | null }>;
   updateProfile: (data: any) => Promise<{ error: any | null }>;
-  resendVerificationEmail: () => Promise<{ error: any | null }>;
-  isEmailVerified: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,7 +22,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -36,12 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
-
-        // Check email verification status
-        if (session?.user) {
-          const isVerified = session.user.email_confirmed_at != null;
-          setIsEmailVerified(isVerified);
-        }
       } catch (error) {
         console.error('Error getting initial session:', error);
       } finally {
@@ -56,15 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-
-        // Check email verification status on auth state change
-        if (session?.user) {
-          const isVerified = session.user.email_confirmed_at != null;
-          setIsEmailVerified(isVerified);
-        } else {
-          setIsEmailVerified(false);
-        }
-
         setIsLoading(false);
       }
     );
@@ -105,8 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             organization: userData.organization,
             role: userData.role || 'vendor', // Default role
           },
-          // Enable email verification
-          emailRedirectTo: `${window.location.origin}/auth/verification-success`,
         },
       });
 
@@ -213,25 +193,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Resend verification email
-  const resendVerificationEmail = async () => {
-    try {
-      if (!user?.email) {
-        return { error: new Error('No user email found') };
-      }
-
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: user.email,
-      });
-
-      return { error };
-    } catch (error) {
-      console.error('Error resending verification email:', error);
-      return { error };
-    }
-  };
-
   const value = {
     session,
     user,
@@ -241,8 +202,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     resetPassword,
     updateProfile,
-    resendVerificationEmail,
-    isEmailVerified,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

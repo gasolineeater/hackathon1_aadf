@@ -47,9 +47,12 @@ export default function SignUp() {
       }
 
       // Show success message
-      setSuccessMessage('Account created successfully! Please check your email to verify your account.');
+      setSuccessMessage('Account created successfully! You can now sign in.');
 
-      // Don't redirect automatically - user needs to verify email first
+      // Redirect to sign in page after a delay
+      setTimeout(() => {
+        router.push('/auth/signin');
+      }, 3000);
     } catch (error: any) {
       setError(error.message || 'An error occurred during sign up');
     } finally {
@@ -98,12 +101,7 @@ export default function SignUp() {
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">{successMessage}</h3>
                   <div className="mt-2 text-sm text-green-700">
-                    <p>Please check your email inbox for a verification link. You need to verify your email before you can sign in.</p>
-                  </div>
-                  <div className="mt-4">
-                    <Link href="/auth/signin" className="text-sm font-medium text-[#0056a4] hover:text-[#004483]">
-                      Go to Sign In
-                    </Link>
+                    <p>Redirecting you to the sign in page...</p>
                   </div>
                 </div>
               </div>
