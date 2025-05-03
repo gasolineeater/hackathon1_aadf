@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { storeDocumentValidation } from '@/lib/ai/databaseStorage';
 
 /**
  * Document validation API
@@ -8,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Required fields validation
     if (!body.documentType || !body.content) {
       return NextResponse.json(
@@ -16,13 +17,23 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     // Extract data from request
     const { documentType, content, metadata } = body;
-    
+
     // Validate document based on type
     const validationResult = await validateDocument(documentType, content, metadata);
-    
+
+    // Store validation result if document ID is provided
+    if (metadata?.documentId) {
+      await storeDocumentValidation(
+        documentType,
+        content,
+        validationResult,
+        metadata.documentId
+      );
+    }
+
     return NextResponse.json(validationResult);
   } catch (error: any) {
     console.error('Error validating document:', error);
@@ -39,7 +50,7 @@ export async function POST(request: NextRequest) {
 async function validateDocument(documentType: string, content: string, metadata?: any) {
   // Document type-specific validation rules
   const validationRules = getValidationRules(documentType);
-  
+
   // Initialize validation results
   const results = {
     isValid: true,
@@ -53,10 +64,10 @@ async function validateDocument(documentType: string, content: string, metadata?
       technical: { score: 0, issues: [] as string[] }
     }
   };
-  
+
   // Perform content analysis
   const contentAnalysis = analyzeDocumentContent(documentType, content);
-  
+
   // Check for required elements
   for (const rule of validationRules.requiredElements) {
     if (!contentAnalysis.elements.includes(rule.element)) {
@@ -70,7 +81,7 @@ async function validateDocument(documentType: string, content: string, metadata?
       });
     }
   }
-  
+
   // Check for compliance issues
   for (const rule of validationRules.complianceRules) {
     const complianceCheck = checkCompliance(rule, content);
@@ -82,28 +93,28 @@ async function validateDocument(documentType: string, content: string, metadata?
         severity: rule.severity,
         message: complianceCheck.issue
       });
-      
+
       if (rule.severity === 'critical') {
         results.isValid = false;
       }
     }
   }
-  
+
   // Calculate scores
   results.compliance.legal.score = calculateCategoryScore(results.compliance.legal.issues, validationRules.complianceRules.filter(r => r.category === 'legal'));
   results.compliance.procurement.score = calculateCategoryScore(results.compliance.procurement.issues, validationRules.complianceRules.filter(r => r.category === 'procurement'));
   results.compliance.technical.score = calculateCategoryScore(results.compliance.technical.issues, validationRules.complianceRules.filter(r => r.category === 'technical'));
-  
+
   // Calculate overall score
   results.score = (
     results.compliance.legal.score * 0.4 +
     results.compliance.procurement.score * 0.4 +
     results.compliance.technical.score * 0.2
   );
-  
+
   // Generate suggestions
   results.suggestions = generateSuggestions(results.issues, documentType);
-  
+
   return results;
 }
 
@@ -144,7 +155,7 @@ function getValidationRules(documentType: string) {
       }
     ]
   };
-  
+
   // Document type-specific rules
   switch (documentType) {
     case 'tender':
@@ -200,7 +211,7 @@ function getValidationRules(documentType: string) {
           }
         ]
       };
-    
+
     case 'proposal':
       return {
         requiredElements: [
@@ -246,7 +257,7 @@ function getValidationRules(documentType: string) {
           }
         ]
       };
-    
+
     case 'contract':
       return {
         requiredElements: [
@@ -287,7 +298,7 @@ function getValidationRules(documentType: string) {
           }
         ]
       };
-    
+
     default:
       return commonRules;
   }
@@ -299,71 +310,71 @@ function getValidationRules(documentType: string) {
 function analyzeDocumentContent(documentType: string, content: string) {
   // This would be replaced with actual NLP/AI analysis
   // For now, we'll use a simple keyword-based approach
-  
+
   const elements = [];
-  
+
   // Check for common elements
   if (content.toLowerCase().includes('title') || content.match(/^.+\n/)) {
     elements.push('title');
   }
-  
+
   if (content.toLowerCase().includes('date') || content.match(/\d{1,2}\/\d{1,2}\/\d{4}/)) {
     elements.push('date');
   }
-  
+
   // Check for document type-specific elements
   switch (documentType) {
     case 'tender':
       if (content.toLowerCase().includes('scope') || content.toLowerCase().includes('scope of work')) {
         elements.push('scope');
       }
-      
+
       if (content.toLowerCase().includes('requirements') || content.toLowerCase().includes('specifications')) {
         elements.push('requirements');
       }
-      
+
       if (content.toLowerCase().includes('evaluation criteria') || content.toLowerCase().includes('selection criteria')) {
         elements.push('evaluation_criteria');
       }
-      
+
       if (content.toLowerCase().includes('submission') || content.toLowerCase().includes('how to submit')) {
         elements.push('submission_instructions');
       }
       break;
-    
+
     case 'proposal':
       if (content.toLowerCase().includes('executive summary') || content.toLowerCase().includes('overview')) {
         elements.push('executive_summary');
       }
-      
+
       if (content.toLowerCase().includes('approach') || content.toLowerCase().includes('methodology')) {
         elements.push('approach');
       }
-      
+
       if (content.toLowerCase().includes('timeline') || content.toLowerCase().includes('schedule')) {
         elements.push('timeline');
       }
-      
+
       if (content.toLowerCase().includes('budget') || content.toLowerCase().includes('cost')) {
         elements.push('budget');
       }
       break;
-    
+
     case 'contract':
       if (content.toLowerCase().includes('parties') || content.toLowerCase().includes('between')) {
         elements.push('parties');
       }
-      
+
       if (content.toLowerCase().includes('terms') || content.toLowerCase().includes('conditions')) {
         elements.push('terms');
       }
-      
+
       if (content.toLowerCase().includes('signature') || content.toLowerCase().includes('signed')) {
         elements.push('signatures');
       }
       break;
   }
-  
+
   return {
     elements,
     wordCount: content.split(/\s+/).length,
@@ -376,7 +387,7 @@ function analyzeDocumentContent(documentType: string, content: string) {
  */
 function checkCompliance(rule: any, content: string) {
   const lowerContent = content.toLowerCase();
-  
+
   switch (rule.check) {
     case 'contains':
       if (!lowerContent.includes(rule.pattern.toLowerCase())) {
@@ -386,7 +397,7 @@ function checkCompliance(rule: any, content: string) {
         };
       }
       break;
-    
+
     case 'not_contains':
       if (lowerContent.includes(rule.pattern.toLowerCase())) {
         return {
@@ -395,7 +406,7 @@ function checkCompliance(rule: any, content: string) {
         };
       }
       break;
-    
+
     case 'regex':
       const regex = new RegExp(rule.pattern, 'i');
       if (!regex.test(content)) {
@@ -406,7 +417,7 @@ function checkCompliance(rule: any, content: string) {
       }
       break;
   }
-  
+
   return { compliant: true };
 }
 
@@ -415,29 +426,29 @@ function checkCompliance(rule: any, content: string) {
  */
 function calculateCategoryScore(issues: string[], rules: any[]) {
   if (rules.length === 0) return 100;
-  
-  const criticalIssues = issues.filter(issue => 
+
+  const criticalIssues = issues.filter(issue =>
     rules.some(rule => rule.severity === 'critical' && issue.includes(rule.description))
   ).length;
-  
-  const warningIssues = issues.filter(issue => 
+
+  const warningIssues = issues.filter(issue =>
     rules.some(rule => rule.severity === 'warning' && issue.includes(rule.description))
   ).length;
-  
+
   const criticalRules = rules.filter(rule => rule.severity === 'critical').length;
   const warningRules = rules.filter(rule => rule.severity === 'warning').length;
-  
+
   // Calculate score with critical issues having more weight
   let score = 100;
-  
+
   if (criticalRules > 0) {
     score -= (criticalIssues / criticalRules) * 70;
   }
-  
+
   if (warningRules > 0) {
     score -= (warningIssues / warningRules) * 30;
   }
-  
+
   return Math.max(0, Math.round(score));
 }
 
@@ -449,10 +460,10 @@ function calculateTextComplexity(text: string) {
   const words = text.split(/\s+/).length;
   const sentences = text.split(/[.!?]+/).length;
   const longWords = text.split(/\s+/).filter(word => word.length > 6).length;
-  
+
   // Simple readability score (higher is more complex)
   const complexity = (words / sentences) + (longWords / words) * 100;
-  
+
   return {
     score: Math.min(100, Math.round(complexity)),
     level: complexity > 25 ? 'high' : complexity > 15 ? 'medium' : 'low'
@@ -464,7 +475,7 @@ function calculateTextComplexity(text: string) {
  */
 function generateSuggestions(issues: any[], documentType: string) {
   const suggestions: string[] = [];
-  
+
   // Generate suggestions based on issue type and severity
   for (const issue of issues) {
     if (issue.type === 'missing_element') {
@@ -473,7 +484,7 @@ function generateSuggestions(issues: any[], documentType: string) {
       suggestions.push(`Critical: ${issue.message}`);
     }
   }
-  
+
   // Add document type-specific suggestions
   switch (documentType) {
     case 'tender':
@@ -481,19 +492,19 @@ function generateSuggestions(issues: any[], documentType: string) {
         suggestions.push('Consider adding more detailed evaluation criteria to attract better proposals.');
       }
       break;
-    
+
     case 'proposal':
       if (!issues.some(i => i.message.includes('executive summary'))) {
         suggestions.push('Strengthen your executive summary to highlight key benefits.');
       }
       break;
-    
+
     case 'contract':
       if (!issues.some(i => i.message.includes('dispute resolution'))) {
         suggestions.push('Include a clear dispute resolution process to prevent future conflicts.');
       }
       break;
   }
-  
+
   return suggestions;
 }

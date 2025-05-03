@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { storeVendorMatches } from '@/lib/ai/databaseStorage';
 
 /**
  * Vendor matching API
@@ -8,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Required fields validation
     if (!body.tenderId && !body.tenderContent) {
       return NextResponse.json(
@@ -16,11 +17,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     let tenderContent = body.tenderContent;
     let tenderMetadata = body.metadata || {};
     let tenderId = body.tenderId;
-    
+
     // If tenderId is provided, fetch the tender from the database
     if (tenderId && !tenderContent) {
       const { data, error } = await supabase
@@ -28,14 +29,14 @@ export async function POST(request: NextRequest) {
         .select('*')
         .eq('id', tenderId)
         .single();
-      
+
       if (error || !data) {
         return NextResponse.json(
           { error: 'Tender not found', details: error?.message },
           { status: 404 }
         );
       }
-      
+
       tenderContent = data.description;
       tenderMetadata = {
         title: data.title,
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
         ...tenderMetadata
       };
     }
-    
+
     // Fetch vendors from the database
     const { data: vendors, error: vendorsError } = await supabase
       .from('vendors')
@@ -61,17 +62,22 @@ export async function POST(request: NextRequest) {
           performance_score
         )
       `);
-    
+
     if (vendorsError) {
       return NextResponse.json(
         { error: 'Error fetching vendors', details: vendorsError.message },
         { status: 500 }
       );
     }
-    
+
     // Match vendors to the tender
     const matchResults = await matchVendorsToTender(vendors, tenderContent, tenderMetadata, tenderId);
-    
+
+    // Store match results if tender ID is provided
+    if (tenderId) {
+      await storeVendorMatches(tenderId, matchResults.vendorMatches);
+    }
+
     return NextResponse.json(matchResults);
   } catch (error: any) {
     console.error('Error matching vendors:', error);
@@ -88,12 +94,12 @@ export async function POST(request: NextRequest) {
 async function matchVendorsToTender(vendors: any[], tenderContent: string, tenderMetadata: any, tenderId?: string) {
   // Extract key requirements from tender
   const requirements = extractTenderRequirements(tenderContent, tenderMetadata);
-  
+
   // Calculate compatibility scores for each vendor
   const vendorMatches = vendors.map(vendor => {
     const compatibilityScore = calculateCompatibilityScore(vendor, requirements);
     const strengthsAndWeaknesses = identifyStrengthsAndWeaknesses(vendor, requirements);
-    
+
     return {
       vendorId: vendor.id,
       vendorName: vendor.name,
@@ -110,15 +116,15 @@ async function matchVendorsToTender(vendors: any[], tenderContent: string, tende
       recommendation: generateVendorRecommendation(compatibilityScore, strengthsAndWeaknesses)
     };
   });
-  
+
   // Sort vendors by compatibility score
   const sortedMatches = vendorMatches.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
-  
+
   // If tenderId is provided, store the match results in the database
   if (tenderId) {
     await storeMatchResults(tenderId, sortedMatches);
   }
-  
+
   return {
     tenderRequirements: requirements,
     vendorMatches: sortedMatches,
@@ -132,44 +138,44 @@ async function matchVendorsToTender(vendors: any[], tenderContent: string, tende
  */
 function extractTenderRequirements(content: string, metadata: any) {
   const lowerContent = content.toLowerCase();
-  
+
   // Extract categories
   const categories = extractCategories(content, metadata);
-  
+
   // Extract expertise areas
   const expertise = extractExpertise(content);
-  
+
   // Extract estimated value/budget
   let estimatedValue = metadata.budget || null;
   if (!estimatedValue) {
-    const budgetMatch = content.match(/budget of \$?(\d+[,\d]*)/i) || 
+    const budgetMatch = content.match(/budget of \$?(\d+[,\d]*)/i) ||
                         content.match(/estimated value of \$?(\d+[,\d]*)/i) ||
                         content.match(/contract value of \$?(\d+[,\d]*)/i);
-    
+
     if (budgetMatch && budgetMatch[1]) {
       estimatedValue = parseInt(budgetMatch[1].replace(/,/g, ''));
     }
   }
-  
+
   // Extract location
   let location = metadata.location || null;
   if (!location) {
     const locationMatch = content.match(/location: ([^\.]+)/i) ||
                           content.match(/based in ([^\.]+)/i) ||
                           content.match(/located in ([^\.]+)/i);
-    
+
     if (locationMatch && locationMatch[1]) {
       location = locationMatch[1].trim();
     }
   }
-  
+
   // Extract duration
   let duration = metadata.duration || null;
   if (!duration) {
     const durationMatch = content.match(/duration of (\d+) (days|weeks|months|years)/i) ||
                           content.match(/period of (\d+) (days|weeks|months|years)/i) ||
                           content.match(/timeframe of (\d+) (days|weeks|months|years)/i);
-    
+
     if (durationMatch && durationMatch[1] && durationMatch[2]) {
       duration = {
         value: parseInt(durationMatch[1]),
@@ -177,7 +183,7 @@ function extractTenderRequirements(content: string, metadata: any) {
       };
     }
   }
-  
+
   // Extract required certifications
   const certifications = [];
   const certificationPatterns = [
@@ -186,14 +192,14 @@ function extractTenderRequirements(content: string, metadata: any) {
     /certification in ([^\.]+)/i,
     /certified ([^\.]+) provider/i
   ];
-  
+
   for (const pattern of certificationPatterns) {
     const matches = content.match(pattern);
     if (matches && matches[1]) {
       certifications.push(matches[1].trim());
     }
   }
-  
+
   return {
     categories,
     expertise,
@@ -213,10 +219,10 @@ function extractCategories(content: string, metadata: any) {
   if (metadata.category) {
     return [metadata.category];
   }
-  
+
   const lowerContent = content.toLowerCase();
   const categories = [];
-  
+
   // Common procurement categories
   const categoryPatterns = [
     { pattern: /IT|information technology|software|hardware|computer/i, category: 'Information Technology' },
@@ -230,13 +236,13 @@ function extractCategories(content: string, metadata: any) {
     { pattern: /medical|healthcare|health|clinical|hospital/i, category: 'Healthcare' },
     { pattern: /transport|logistics|shipping|freight|delivery/i, category: 'Transportation & Logistics' }
   ];
-  
+
   for (const { pattern, category } of categoryPatterns) {
     if (pattern.test(content)) {
       categories.push(category);
     }
   }
-  
+
   return categories;
 }
 
@@ -246,7 +252,7 @@ function extractCategories(content: string, metadata: any) {
 function extractExpertise(content: string) {
   const lowerContent = content.toLowerCase();
   const expertise = [];
-  
+
   // Common expertise areas
   const expertisePatterns = [
     { pattern: /web development|website|web application/i, expertise: 'Web Development' },
@@ -264,13 +270,13 @@ function extractExpertise(content: string) {
     { pattern: /content|copywriting|writing|blog|article/i, expertise: 'Content Creation' },
     { pattern: /event|conference|exhibition|workshop organization/i, expertise: 'Event Management' }
   ];
-  
+
   for (const { pattern, expertise: exp } of expertisePatterns) {
     if (pattern.test(content)) {
       expertise.push(exp);
     }
   }
-  
+
   return expertise;
 }
 
@@ -282,11 +288,11 @@ function extractTeamSize(content: string) {
                         content.match(/(\d+) team members/i) ||
                         content.match(/(\d+) staff/i) ||
                         content.match(/(\d+) personnel/i);
-  
+
   if (teamSizeMatch && teamSizeMatch[1]) {
     return parseInt(teamSizeMatch[1]);
   }
-  
+
   return null;
 }
 
@@ -296,7 +302,7 @@ function extractTeamSize(content: string) {
 function extractSpecialRequirements(content: string) {
   const lowerContent = content.toLowerCase();
   const specialRequirements = [];
-  
+
   // Common special requirements
   const requirementPatterns = [
     { pattern: /security clearance/i, requirement: 'Security Clearance' },
@@ -310,13 +316,13 @@ function extractSpecialRequirements(content: string) {
     { pattern: /compliance|compliant with/i, requirement: 'Regulatory Compliance' },
     { pattern: /accessibility|accessible/i, requirement: 'Accessibility Compliance' }
   ];
-  
+
   for (const { pattern, requirement } of requirementPatterns) {
     if (pattern.test(content)) {
       specialRequirements.push(requirement);
     }
   }
-  
+
   return specialRequirements;
 }
 
@@ -330,7 +336,7 @@ function calculateCompatibilityScore(vendor: any, requirements: any) {
   const capacityMatchScore = calculateCapacityMatch(vendor, requirements.estimatedValue);
   const performanceMatchScore = calculatePerformanceMatch(vendor);
   const locationMatchScore = calculateLocationMatch(vendor, requirements.location);
-  
+
   // Calculate weighted average
   const weightedScore = (
     (categoryMatchScore * 0.25) +
@@ -339,7 +345,7 @@ function calculateCompatibilityScore(vendor: any, requirements: any) {
     (performanceMatchScore * 0.2) +
     (locationMatchScore * 0.1)
   );
-  
+
   return Math.round(weightedScore);
 }
 
@@ -350,14 +356,14 @@ function calculateCategoryMatch(vendor: any, tenderCategories: string[]) {
   if (!tenderCategories || tenderCategories.length === 0) {
     return 100; // No specific categories required
   }
-  
+
   if (!vendor.vendor_categories || vendor.vendor_categories.length === 0) {
     return 0; // Vendor has no categories
   }
-  
+
   // Extract vendor categories
   const vendorCategories = vendor.vendor_categories.map((vc: any) => vc.category);
-  
+
   // Count matching categories
   let matchCount = 0;
   for (const category of tenderCategories) {
@@ -365,7 +371,7 @@ function calculateCategoryMatch(vendor: any, tenderCategories: string[]) {
       matchCount++;
     }
   }
-  
+
   return Math.round((matchCount / tenderCategories.length) * 100);
 }
 
@@ -376,14 +382,14 @@ function calculateExpertiseMatch(vendor: any, tenderExpertise: string[]) {
   if (!tenderExpertise || tenderExpertise.length === 0) {
     return 100; // No specific expertise required
   }
-  
+
   if (!vendor.vendor_expertise || vendor.vendor_expertise.length === 0) {
     return 0; // Vendor has no expertise
   }
-  
+
   // Extract vendor expertise
   const vendorExpertise = vendor.vendor_expertise.map((ve: any) => ve.expertise);
-  
+
   // Count matching expertise areas
   let matchCount = 0;
   for (const expertise of tenderExpertise) {
@@ -391,7 +397,7 @@ function calculateExpertiseMatch(vendor: any, tenderExpertise: string[]) {
       matchCount++;
     }
   }
-  
+
   return Math.round((matchCount / tenderExpertise.length) * 100);
 }
 
@@ -402,17 +408,17 @@ function calculateCapacityMatch(vendor: any, estimatedValue: number | null) {
   if (!estimatedValue) {
     return 100; // No specific budget requirement
   }
-  
+
   // Check if vendor has capacity information
   if (!vendor.annual_revenue || !vendor.max_contract_value) {
     return 50; // Neutral score if capacity info is missing
   }
-  
+
   // Check if the estimated value is within vendor's capacity
   if (estimatedValue <= vendor.max_contract_value) {
     // Calculate how well the contract fits the vendor's capacity
     const contractToRevenueRatio = estimatedValue / vendor.annual_revenue;
-    
+
     if (contractToRevenueRatio <= 0.05) {
       return 100; // Contract is small relative to vendor's capacity
     } else if (contractToRevenueRatio <= 0.2) {
@@ -436,11 +442,11 @@ function calculatePerformanceMatch(vendor: any) {
   if (!vendor.vendor_past_performance || vendor.vendor_past_performance.length === 0) {
     return 50; // Neutral score if no past performance data
   }
-  
+
   // Calculate average performance score
   const performanceScores = vendor.vendor_past_performance.map((pp: any) => pp.performance_score);
   const averageScore = performanceScores.reduce((sum: number, score: number) => sum + score, 0) / performanceScores.length;
-  
+
   // Convert to 0-100 scale (assuming performance_score is on a 1-5 scale)
   return Math.round((averageScore / 5) * 100);
 }
@@ -452,28 +458,28 @@ function calculateLocationMatch(vendor: any, tenderLocation: string | null) {
   if (!tenderLocation) {
     return 100; // No specific location requirement
   }
-  
+
   if (!vendor.location) {
     return 50; // Neutral score if vendor location is unknown
   }
-  
+
   // Simple string matching for now
   // In a real implementation, this would use geocoding and distance calculation
   if (vendor.location.toLowerCase().includes(tenderLocation.toLowerCase()) ||
       tenderLocation.toLowerCase().includes(vendor.location.toLowerCase())) {
     return 100;
   }
-  
+
   // Check for country/region match
   const vendorLocationParts = vendor.location.toLowerCase().split(/,|\s+/);
   const tenderLocationParts = tenderLocation.toLowerCase().split(/,|\s+/);
-  
+
   for (const part of vendorLocationParts) {
     if (part.length > 2 && tenderLocationParts.includes(part)) {
       return 80; // Partial location match
     }
   }
-  
+
   return 50; // Default to neutral score
 }
 
@@ -483,7 +489,7 @@ function calculateLocationMatch(vendor: any, tenderLocation: string | null) {
 function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
   const strengths = [];
   const weaknesses = [];
-  
+
   // Category match
   const categoryMatchScore = calculateCategoryMatch(vendor, requirements.categories);
   if (categoryMatchScore >= 80) {
@@ -491,7 +497,7 @@ function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
   } else if (categoryMatchScore <= 30) {
     weaknesses.push('Limited experience in the required categories');
   }
-  
+
   // Expertise match
   const expertiseMatchScore = calculateExpertiseMatch(vendor, requirements.expertise);
   if (expertiseMatchScore >= 80) {
@@ -499,7 +505,7 @@ function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
   } else if (expertiseMatchScore <= 30) {
     weaknesses.push('Limited expertise in the required areas');
   }
-  
+
   // Capacity match
   const capacityMatchScore = calculateCapacityMatch(vendor, requirements.estimatedValue);
   if (capacityMatchScore >= 80) {
@@ -507,7 +513,7 @@ function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
   } else if (capacityMatchScore <= 30) {
     weaknesses.push('Project size may be challenging for vendor capacity');
   }
-  
+
   // Performance match
   const performanceMatchScore = calculatePerformanceMatch(vendor);
   if (performanceMatchScore >= 80) {
@@ -515,7 +521,7 @@ function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
   } else if (performanceMatchScore <= 30) {
     weaknesses.push('Limited or concerning past performance record');
   }
-  
+
   // Location match
   const locationMatchScore = calculateLocationMatch(vendor, requirements.location);
   if (locationMatchScore >= 80) {
@@ -523,14 +529,14 @@ function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
   } else if (locationMatchScore <= 30) {
     weaknesses.push('Location may present challenges for project delivery');
   }
-  
+
   // Check for certifications
   if (requirements.certifications && requirements.certifications.length > 0) {
     const vendorCertifications = vendor.certifications || [];
-    const matchingCertifications = requirements.certifications.filter((cert: string) => 
+    const matchingCertifications = requirements.certifications.filter((cert: string) =>
       vendorCertifications.some((vc: string) => vc.toLowerCase().includes(cert.toLowerCase()))
     );
-    
+
     if (matchingCertifications.length === requirements.certifications.length) {
       strengths.push('Has all required certifications');
     } else if (matchingCertifications.length === 0) {
@@ -539,15 +545,15 @@ function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
       weaknesses.push('Missing some required certifications');
     }
   }
-  
+
   // Check for special requirements
   if (requirements.specialRequirements && requirements.specialRequirements.length > 0) {
     // This would need to be expanded with actual vendor capabilities data
     if (vendor.special_capabilities) {
-      const matchingCapabilities = requirements.specialRequirements.filter((req: string) => 
+      const matchingCapabilities = requirements.specialRequirements.filter((req: string) =>
         vendor.special_capabilities.some((cap: string) => cap.toLowerCase().includes(req.toLowerCase()))
       );
-      
+
       if (matchingCapabilities.length > 0) {
         strengths.push('Meets special project requirements');
       } else {
@@ -557,7 +563,7 @@ function identifyStrengthsAndWeaknesses(vendor: any, requirements: any) {
       weaknesses.push('Unknown capability for special project requirements');
     }
   }
-  
+
   return { strengths, weaknesses };
 }
 
@@ -596,9 +602,9 @@ function generateMatchSummary(vendorMatches: any[]) {
   const highlyCompatible = vendorMatches.filter(v => v.compatibilityScore >= 85).length;
   const moderatelyCompatible = vendorMatches.filter(v => v.compatibilityScore >= 70 && v.compatibilityScore < 85).length;
   const lowCompatible = vendorMatches.filter(v => v.compatibilityScore < 70).length;
-  
+
   const averageScore = vendorMatches.reduce((sum, v) => sum + v.compatibilityScore, 0) / totalVendors;
-  
+
   return {
     totalVendors,
     highlyCompatible,
@@ -620,7 +626,7 @@ async function storeMatchResults(tenderId: string, vendorMatches: any[]) {
       .from('tender_vendor_matches')
       .delete()
       .eq('tender_id', tenderId);
-    
+
     // Insert new matches
     const matchesToInsert = vendorMatches.map(match => ({
       tender_id: tenderId,
@@ -632,11 +638,11 @@ async function storeMatchResults(tenderId: string, vendorMatches: any[]) {
       recommendation: match.recommendation.recommendation,
       created_at: new Date().toISOString()
     }));
-    
+
     const { error } = await supabase
       .from('tender_vendor_matches')
       .insert(matchesToInsert);
-    
+
     if (error) {
       console.error('Error storing match results:', error);
     }

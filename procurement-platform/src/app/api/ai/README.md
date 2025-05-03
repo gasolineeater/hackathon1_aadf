@@ -8,6 +8,23 @@ The platform includes several AI-powered APIs for analyzing tenders, proposals, 
 
 ## Available Endpoints
 
+### Analysis Endpoints
+
+1. **Base AI API Information** (`GET /api/ai`)
+2. **Document Validation** (`POST /api/ai/validate-document`)
+3. **Tender Evaluation** (`POST /api/ai/evaluate-tender`)
+4. **Vendor Matching** (`POST /api/ai/match-vendors`)
+5. **Proposal Analysis** (`POST /api/ai/analyze-proposal`)
+
+### Retrieval Endpoints
+
+6. **Get Document Validation** (`GET /api/ai/analyses/document/[id]`)
+7. **Get Tender Evaluation** (`GET /api/ai/analyses/tender/[id]`)
+8. **Get Vendor Matches** (`GET /api/ai/analyses/matches/tender/[id]`)
+9. **Get Proposal Analysis** (`GET /api/ai/analyses/proposal?proposalId=[id]&tenderId=[id]`)
+10. **Get Tender Proposal Analyses** (`GET /api/ai/analyses/tender/[id]/proposals`)
+11. **Get Vendor Proposal Analyses** (`GET /api/ai/analyses/vendor/[id]/proposals`)
+
 ### 1. Base AI API Information
 
 **Endpoint:** `GET /api/ai`
@@ -333,6 +350,272 @@ Analyzes a vendor proposal against tender requirements.
     // Extracted tender requirements
   }
 }
+```
+
+### 6. Get Document Validation API
+
+**Endpoint:** `GET /api/ai/analyses/document/[id]`
+
+Retrieves the most recent document validation result for a specific document.
+
+**Path Parameters:**
+- `id` (required): The ID of the document
+
+**Response Example:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "document_type": "tender",
+  "document_id": "123456",
+  "content_hash": "a1b2c3d4e5f6...",
+  "is_valid": true,
+  "score": 85,
+  "issues": [
+    {
+      "type": "missing_element",
+      "severity": "warning",
+      "message": "Missing required element: timeline"
+    }
+  ],
+  "suggestions": [
+    "Add a timeline section to your document."
+  ],
+  "missing_elements": ["timeline"],
+  "compliance": {
+    "legal": { "score": 90, "issues": [] },
+    "procurement": { "score": 80, "issues": ["Document does not contain required content: Tender must specify submission deadline"] },
+    "technical": { "score": 85, "issues": [] }
+  },
+  "created_at": "2023-11-20T12:34:56.789Z"
+}
+```
+
+### 7. Get Tender Evaluation API
+
+**Endpoint:** `GET /api/ai/analyses/tender/[id]`
+
+Retrieves the most recent tender evaluation result for a specific tender.
+
+**Path Parameters:**
+- `id` (required): The ID of the tender
+
+**Response Example:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "tender_id": "123456",
+  "content_hash": "a1b2c3d4e5f6...",
+  "score": 78,
+  "quality": {
+    "clarity": { "score": 85, "feedback": "The tender is clearly written with straightforward language and well-defined requirements." },
+    "completeness": { "score": 70, "feedback": "Missing essential elements: timeline, question process." },
+    "fairness": { "score": 90, "feedback": "The tender appears fair and unbiased with clear evaluation criteria." },
+    "specificity": { "score": 75, "feedback": "Lacks specific numerical requirements and specifications." }
+  },
+  "issues": [
+    {
+      "type": "completeness",
+      "severity": "warning",
+      "message": "Completeness issues: Missing essential elements: timeline, question process."
+    }
+  ],
+  "recommendations": [
+    "Add missing essential elements to ensure a complete tender document.",
+    "Replace vague terms with specific, measurable requirements."
+  ],
+  "strengths": [
+    "Clear and well-articulated requirements",
+    "Fair and unbiased evaluation criteria"
+  ],
+  "weaknesses": [
+    "Missing important tender elements",
+    "Requirements lack specific details"
+  ],
+  "created_at": "2023-11-20T12:34:56.789Z"
+}
+```
+
+### 8. Get Vendor Matches API
+
+**Endpoint:** `GET /api/ai/analyses/matches/tender/[id]`
+
+Retrieves vendor matching results for a specific tender.
+
+**Path Parameters:**
+- `id` (required): The ID of the tender
+
+**Response Example:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "tender_id": "123456",
+    "vendor_id": "v123",
+    "compatibility_score": 92,
+    "match_details": {
+      "categoryMatch": 100,
+      "expertiseMatch": 90,
+      "capacityMatch": 85,
+      "performanceMatch": 95,
+      "locationMatch": 80
+    },
+    "strengths": [
+      "Strong category alignment with tender requirements",
+      "Excellent expertise match with tender requirements",
+      "Strong past performance record"
+    ],
+    "weaknesses": [],
+    "recommendation": "Highly Recommended",
+    "created_at": "2023-11-20T12:34:56.789Z",
+    "updated_at": "2023-11-20T12:34:56.789Z",
+    "vendors": {
+      "id": "v123",
+      "name": "TechSolutions Inc.",
+      "contact_person": "John Doe",
+      "contact_email": "john@techsolutions.com"
+    }
+  }
+]
+```
+
+### 9. Get Proposal Analysis API
+
+**Endpoint:** `GET /api/ai/analyses/proposal?proposalId=[id]&tenderId=[id]`
+
+Retrieves the most recent proposal analysis result for a specific proposal and tender.
+
+**Query Parameters:**
+- `proposalId` (required): The ID of the proposal
+- `tenderId` (required): The ID of the tender
+
+**Response Example:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440003",
+  "proposal_id": "p123",
+  "tender_id": "123456",
+  "content_hash": "a1b2c3d4e5f6...",
+  "overall_score": 85,
+  "compliance_score": 90,
+  "evaluation_score": 82,
+  "recommendation": "Accept",
+  "key_findings": [
+    "Proposal addresses 90% of tender requirements.",
+    "Strong overall proposal with evaluation score of 82/100."
+  ],
+  "compliance": {
+    "compliant": true,
+    "complianceScore": 90,
+    "requirementResults": [
+      // Detailed requirement results
+    ],
+    "mandatoryRequirements": {
+      "meetsAllMandatory": true,
+      "missingRequirements": []
+    },
+    "budgetCompliance": {
+      "withinBudget": true,
+      "proposedAmount": 68500
+    }
+  },
+  "evaluation": {
+    "totalScore": 82,
+    "criteriaScores": [
+      {
+        "criterion": "Technical approach and methodology",
+        "score": 92,
+        "weight": 40,
+        "weightedScore": 36.8,
+        "justification": "Excellent response that fully addresses the criterion with clear, specific details."
+      }
+    ]
+  },
+  "insights": {
+    "strengths": [
+      "Strong Technical approach and methodology (92/100)",
+      "Comprehensive and well-structured proposal"
+    ],
+    "weaknesses": [
+      "Weak Cost effectiveness (70/100)"
+    ],
+    "recommendations": [
+      "Add more detail on cost-saving measures and efficiency improvements."
+    ]
+  },
+  "created_at": "2023-11-20T12:34:56.789Z",
+  "updated_at": "2023-11-20T12:34:56.789Z"
+}
+```
+
+### 10. Get Tender Proposal Analyses API
+
+**Endpoint:** `GET /api/ai/analyses/tender/[id]/proposals`
+
+Retrieves all proposal analyses for a specific tender.
+
+**Path Parameters:**
+- `id` (required): The ID of the tender
+
+**Response Example:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "proposal_id": "p123",
+    "tender_id": "123456",
+    "overall_score": 85,
+    "compliance_score": 90,
+    "evaluation_score": 82,
+    "recommendation": "Accept",
+    "created_at": "2023-11-20T12:34:56.789Z",
+    "proposals": {
+      "id": "p123",
+      "title": "Web Application Development Proposal",
+      "vendor_id": "v123",
+      "vendors": {
+        "id": "v123",
+        "name": "TechSolutions Inc."
+      }
+    }
+  },
+  // Additional proposal analyses
+]
+```
+
+### 11. Get Vendor Proposal Analyses API
+
+**Endpoint:** `GET /api/ai/analyses/vendor/[id]/proposals`
+
+Retrieves all proposal analyses for a specific vendor.
+
+**Path Parameters:**
+- `id` (required): The ID of the vendor
+
+**Response Example:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "proposal_id": "p123",
+    "tender_id": "123456",
+    "overall_score": 85,
+    "compliance_score": 90,
+    "evaluation_score": 82,
+    "recommendation": "Accept",
+    "created_at": "2023-11-20T12:34:56.789Z",
+    "proposals": {
+      "id": "p123",
+      "title": "Web Application Development Proposal",
+      "submitted_at": "2023-06-25T10:30:00.000Z"
+    },
+    "tenders": {
+      "id": "123456",
+      "title": "Web Application Development RFP",
+      "submission_deadline": "2023-06-30T23:59:59.000Z"
+    }
+  },
+  // Additional proposal analyses
+]
 ```
 
 ## Error Handling

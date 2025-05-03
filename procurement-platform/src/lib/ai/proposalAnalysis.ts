@@ -20,40 +20,40 @@ export async function analyzeProposal(
 ) {
   // Extract tender requirements
   const tenderRequirements = extractTenderRequirements(tenderContent, tenderMetadata);
-  
+
   // Extract key phrases from the proposal
   const proposalKeyPhrases = extractKeyPhrases(proposalContent, 5);
-  
+
   // Check compliance with requirements
   const allRequirements = [
     ...(tenderRequirements.technicalRequirements || []),
     ...(tenderRequirements.qualificationRequirements || [])
   ];
-  
+
   const complianceResults = checkCompliance(allRequirements, proposalContent);
-  
+
   // Check mandatory requirements
   const mandatoryRequirements = tenderRequirements.qualificationRequirements || [];
   const mandatoryResults = checkMandatoryRequirements(mandatoryRequirements, proposalContent);
-  
+
   // Check budget compliance
   const budgetCompliance = checkBudgetCompliance(tenderRequirements.budget || {}, proposalContent);
-  
+
   // Score proposal against evaluation criteria
   const scoringResults = scoreProposal(
     tenderRequirements.evaluationCriteria || [],
     proposalContent
   );
-  
+
   // Generate recommendations
   const recommendations = generateProposalRecommendations(complianceResults, scoringResults);
-  
+
   // Generate overall recommendation
   const overallRecommendation = generateOverallRecommendation(
     complianceResults.complianceScore,
     scoringResults.totalScore
   );
-  
+
   // Compile analysis results
   return {
     summary: {
@@ -100,7 +100,7 @@ function generateKeyFindings(
   budgetCompliance: any
 ): string[] {
   const findings: string[] = [];
-  
+
   // Compliance findings
   if (complianceResults.compliant) {
     findings.push(`Proposal addresses ${complianceResults.complianceScore}% of tender requirements.`);
@@ -108,7 +108,7 @@ function generateKeyFindings(
     const missingCount = complianceResults.requirementResults.filter((r: any) => !r.addressed).length;
     findings.push(`Proposal fails to address ${missingCount} tender requirements.`);
   }
-  
+
   // Evaluation findings
   if (scoringResults.totalScore >= 80) {
     findings.push(`Strong overall proposal with evaluation score of ${scoringResults.totalScore}/100.`);
@@ -117,29 +117,29 @@ function generateKeyFindings(
   } else {
     findings.push(`Weak proposal with evaluation score of ${scoringResults.totalScore}/100.`);
   }
-  
+
   // Budget findings
   if (budgetCompliance.withinBudget) {
     findings.push('Proposal is within the specified budget constraints.');
   } else if (budgetCompliance.proposedAmount) {
     findings.push('Proposal exceeds the specified budget constraints.');
   }
-  
+
   // Criteria findings
   const highestCriterion = [...scoringResults.criteriaScores]
     .sort((a, b) => b.score - a.score)[0];
-    
+
   const lowestCriterion = [...scoringResults.criteriaScores]
     .sort((a, b) => a.score - b.score)[0];
-  
+
   if (highestCriterion) {
     findings.push(`Strongest in "${highestCriterion.criterion}" (${highestCriterion.score}/100).`);
   }
-  
+
   if (lowestCriterion && lowestCriterion.score < 60) {
     findings.push(`Weakest in "${lowestCriterion.criterion}" (${lowestCriterion.score}/100).`);
   }
-  
+
   return findings;
 }
 
@@ -150,25 +150,25 @@ function generateKeyFindings(
  */
 function identifyStrengths(scoringResults: any): string[] {
   const strengths: string[] = [];
-  
+
   // Identify high-scoring criteria
   const highScoringCriteria = scoringResults.criteriaScores
     .filter((c: any) => c.score >= 80)
     .sort((a: any, b: any) => b.score - a.score);
-  
+
   for (const criterion of highScoringCriteria.slice(0, 3)) {
     strengths.push(`Strong ${criterion.criterion.toLowerCase()} (${criterion.score}/100)`);
   }
-  
+
   // Add general strengths based on overall score
   if (scoringResults.totalScore >= 80) {
     strengths.push('Comprehensive and well-structured proposal');
   }
-  
+
   if (scoringResults.totalScore >= 75) {
     strengths.push('Clear understanding of tender requirements');
   }
-  
+
   return strengths;
 }
 
@@ -180,76 +180,38 @@ function identifyStrengths(scoringResults: any): string[] {
  */
 function identifyWeaknesses(complianceResults: any, scoringResults: any): string[] {
   const weaknesses: string[] = [];
-  
+
   // Identify low-scoring criteria
   const lowScoringCriteria = scoringResults.criteriaScores
     .filter((c: any) => c.score < 60)
     .sort((a: any, b: any) => a.score - b.score);
-  
+
   for (const criterion of lowScoringCriteria.slice(0, 3)) {
     weaknesses.push(`Weak ${criterion.criterion.toLowerCase()} (${criterion.score}/100)`);
   }
-  
+
   // Add compliance weaknesses
   if (!complianceResults.compliant) {
     const missingRequirements = complianceResults.requirementResults
       .filter((r: any) => !r.addressed)
       .slice(0, 3)
       .map((r: any) => r.requirement);
-    
+
     if (missingRequirements.length > 0) {
       weaknesses.push(`Fails to address key requirements: ${missingRequirements.join(', ')}`);
     }
   }
-  
+
   // Add general weaknesses based on overall score
   if (scoringResults.totalScore < 60) {
     weaknesses.push('Insufficient detail and specificity throughout the proposal');
   }
-  
+
   if (scoringResults.totalScore < 50) {
     weaknesses.push('Poor alignment with tender objectives and requirements');
   }
-  
+
   return weaknesses;
 }
 
-/**
- * Stores analysis results in the database
- * @param tenderId The tender ID
- * @param proposalId The proposal ID
- * @param analysisResult The analysis results
- */
-export async function storeAnalysisResult(
-  tenderId: string,
-  proposalId: string,
-  analysisResult: any
-) {
-  try {
-    // This would be implemented to store results in the database
-    // For now, we'll just log that it would be stored
-    console.log(`Analysis results would be stored for tender ${tenderId} and proposal ${proposalId}`);
-    
-    // In a real implementation, this would use supabase to store the results
-    /*
-    const { error } = await supabase
-      .from('proposal_analyses')
-      .upsert({
-        tender_id: tenderId,
-        proposal_id: proposalId,
-        compliance_score: analysisResult.summary.complianceScore,
-        evaluation_score: analysisResult.summary.evaluationScore,
-        overall_score: analysisResult.summary.overallScore,
-        recommendation: analysisResult.recommendation.recommendation,
-        analysis_data: analysisResult,
-        created_at: new Date().toISOString()
-      });
-      
-    if (error) {
-      console.error('Error storing analysis results:', error);
-    }
-    */
-  } catch (error) {
-    console.error('Error storing analysis results:', error);
-  }
-}
+

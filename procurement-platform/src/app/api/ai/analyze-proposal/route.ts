@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { analyzeProposal, storeAnalysisResult } from '@/lib/ai/proposalAnalysis';
+import { analyzeProposal } from '@/lib/ai/proposalAnalysis';
+import { storeProposalAnalysis } from '@/lib/ai/databaseStorage';
 
 /**
  * Proposal analysis API
@@ -81,7 +82,13 @@ export async function POST(request: NextRequest) {
 
     // Store analysis result if IDs are provided
     if (body.proposalId && body.tenderId) {
-      await storeAnalysisResult(body.tenderId, body.proposalId, analysisResult);
+      await storeProposalAnalysis(
+        body.tenderId,
+        body.proposalId,
+        proposalContent,
+        tenderContent,
+        analysisResult
+      );
     }
 
     return NextResponse.json(analysisResult);
