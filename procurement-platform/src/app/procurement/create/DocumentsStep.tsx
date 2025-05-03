@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MicroButton from '../../components/MicroButton';
 import { Document, DocumentType } from '../../types/procurement';
+import DocumentUploader from '../../components/DocumentUploader';
 
 interface DocumentsStepProps {
   formData: {
@@ -23,7 +24,7 @@ export default function DocumentsStep({
   const [documentName, setDocumentName] = useState('');
   const [documentDescription, setDocumentDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
-  
+
   // Document type options
   const documentTypes: { value: DocumentType; label: string }[] = [
     { value: 'tender_specification', label: 'Tender Specification' },
@@ -32,24 +33,24 @@ export default function DocumentsStep({
     { value: 'contract', label: 'Contract Template' },
     { value: 'other', label: 'Other' },
   ];
-  
+
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setUploadingFile(file);
-      
+
       // Auto-fill name if not already set
       if (!documentName) {
         setDocumentName(file.name.split('.')[0]);
       }
     }
   };
-  
+
   // Add document
   const addDocument = () => {
     if (!uploadingFile) return;
-    
+
     // In a real app, this would upload the file to a server
     // For now, we'll just create a mock document
     const newDocument: Document = {
@@ -64,49 +65,49 @@ export default function DocumentsStep({
       description: documentDescription,
       isPublic,
     };
-    
+
     updateFormData({
       documents: [...formData.documents, newDocument],
     });
-    
+
     // Reset form
     setUploadingFile(null);
     setDocumentName('');
     setDocumentDescription('');
     setDocumentType('tender_specification');
     setIsPublic(true);
-    
+
     // Reset file input
     const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
   };
-  
+
   // Remove document
   const removeDocument = (index: number) => {
     const updatedDocuments = [...formData.documents];
     updatedDocuments.splice(index, 1);
     updateFormData({ documents: updatedDocuments });
   };
-  
+
   // Format file size
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  
+
   // Get document type label
   const getDocumentTypeLabel = (type: DocumentType): string => {
     const typeObj = documentTypes.find((t) => t.value === type);
     return typeObj ? typeObj.label : type.replace('_', ' ');
   };
-  
+
   // Get icon for file type
   const getFileIcon = (fileType: string) => {
     if (fileType.includes('pdf')) {
@@ -141,7 +142,7 @@ export default function DocumentsStep({
       );
     }
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 p-4 rounded-md">
@@ -151,147 +152,21 @@ export default function DocumentsStep({
           These documents provide detailed information about the tender requirements.
         </p>
       </div>
-      
-      <div className="border border-gray-200 rounded-md p-4">
-        <h3 className="text-md font-medium text-gray-900 mb-4">Upload New Document</h3>
-        
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            File
-          </label>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-                aria-hidden="true"
-              >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <div className="flex text-sm text-gray-600">
-                <label
-                  htmlFor="file-upload"
-                  className="relative cursor-pointer bg-white rounded-md font-medium text-[#0056a4] hover:text-[#004483] focus-within:outline-none"
-                >
-                  <span>Upload a file</span>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    className="sr-only"
-                    onChange={handleFileSelect}
-                  />
-                </label>
-                <p className="pl-1">or drag and drop</p>
-              </div>
-              <p className="text-xs text-gray-500">
-                PDF, Word, Excel, or image files up to 10MB
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        {uploadingFile && (
-          <div className="bg-gray-50 p-3 rounded-md mb-4">
-            <div className="flex items-center">
-              {getFileIcon(uploadingFile.type)}
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{uploadingFile.name}</p>
-                <p className="text-xs text-gray-500">{formatFileSize(uploadingFile.size)}</p>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label htmlFor="documentName" className="block text-sm font-medium text-gray-700 mb-1">
-              Document Name
-            </label>
-            <input
-              type="text"
-              id="documentName"
-              value={documentName}
-              onChange={(e) => setDocumentName(e.target.value)}
-              className="block w-full rounded-md shadow-sm focus:ring-[#0056a4] focus:border-[#0056a4] sm:text-sm border-gray-300"
-              placeholder="Enter document name"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="documentType" className="block text-sm font-medium text-gray-700 mb-1">
-              Document Type
-            </label>
-            <select
-              id="documentType"
-              value={documentType}
-              onChange={(e) => setDocumentType(e.target.value as DocumentType)}
-              className="block w-full rounded-md shadow-sm focus:ring-[#0056a4] focus:border-[#0056a4] sm:text-sm border-gray-300"
-            >
-              {documentTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        
-        <div className="mb-4">
-          <label htmlFor="documentDescription" className="block text-sm font-medium text-gray-700 mb-1">
-            Description (Optional)
-          </label>
-          <textarea
-            id="documentDescription"
-            value={documentDescription}
-            onChange={(e) => setDocumentDescription(e.target.value)}
-            className="block w-full rounded-md shadow-sm focus:ring-[#0056a4] focus:border-[#0056a4] sm:text-sm border-gray-300"
-            placeholder="Enter document description"
-            rows={2}
-          />
-        </div>
-        
-        <div className="mb-4">
-          <div className="flex items-center">
-            <input
-              id="isPublic"
-              type="checkbox"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
-              className="h-4 w-4 text-[#0056a4] focus:ring-[#0056a4] border-gray-300 rounded"
-            />
-            <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-700">
-              Make document publicly available to all potential bidders
-            </label>
-          </div>
-        </div>
-        
-        <div className="flex justify-end">
-          <MicroButton
-            variant="primary"
-            onClick={addDocument}
-            disabled={!uploadingFile}
-            icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
-              </svg>
-            }
-          >
-            Upload Document
-          </MicroButton>
-        </div>
-      </div>
-      
+
+      <DocumentUploader
+        onUploadComplete={(document) => {
+          updateFormData({
+            documents: [...formData.documents, document],
+          });
+        }}
+        allowedTypes={documentTypes.map(type => type.value as DocumentType)}
+        label="Upload New Document"
+        description="PDF, Word, Excel, or image files up to 10MB"
+      />
+
       <div>
         <h3 className="text-md font-medium text-gray-900 mb-4">Uploaded Documents</h3>
-        
+
         {formData.documents.length === 0 ? (
           <div className="bg-gray-50 p-6 text-center rounded-md">
             <svg
