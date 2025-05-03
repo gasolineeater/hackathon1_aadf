@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
+import NotificationCenter from './NotificationCenter';
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
@@ -174,7 +175,7 @@ export default function Navbar() {
             </div>
           </nav>
 
-          {/* Search and Language Selector */}
+          {/* Search, Notifications, and Language Selector */}
           <div className="flex items-center space-x-2">
             {/* Search button */}
             <button className="text-gray-700 hover:text-[#0056a4] focus:outline-none p-1">
@@ -182,6 +183,13 @@ export default function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
+
+            {/* Notifications - only show when logged in */}
+            {user && (
+              <div className="mx-1">
+                <NotificationCenter />
+              </div>
+            )}
 
             {/* Language selector */}
             <Link href="/al" className="flex items-center justify-center w-8 h-8 rounded-full bg-[#5A2D81] text-white text-xs ml-2">
