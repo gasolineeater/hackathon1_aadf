@@ -17,7 +17,7 @@ import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export default function TenderDetailPage() {
   const params = useParams();
-  const tenderId = params.id as string;
+  const tenderId = params.tenderId as string;
   const router = useRouter();
   const { showToast } = useToast();
   const { user } = useAuth();

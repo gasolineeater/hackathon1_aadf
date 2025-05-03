@@ -10,7 +10,7 @@ import InsightsList from '@/app/components/ai/InsightsList';
 
 export default function TenderEvaluationPage() {
   const params = useParams();
-  const tenderId = params.id as string;
+  const tenderId = params.tenderId as string;
   const { showToast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
