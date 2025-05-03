@@ -1,241 +1,355 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
-// Mock notifications database
-let notificationsDb: any[] = [
-  {
-    id: '1',
-    userId: 'user-1',
-    type: 'info',
-    title: 'New Tender Published',
-    message: 'A new tender "Urban Trails Project" has been published.',
-    link: '/tenders/urban-trails',
-    linkText: 'View Tender',
-    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    read: false,
-    entityType: 'tender',
-    entityId: 'urban-trails'
-  },
-  {
-    id: '2',
-    userId: 'user-1',
-    type: 'warning',
-    title: 'Tender Deadline Approaching',
-    message: 'The deadline for "Digital Transformation" tender is tomorrow.',
-    link: '/tenders/digital-transformation',
-    linkText: 'View Tender',
-    createdAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    read: false,
-    entityType: 'tender',
-    entityId: 'digital-transformation'
-  },
-  {
-    id: '3',
-    userId: 'user-1',
-    type: 'success',
-    title: 'Proposal Submitted',
-    message: 'Your proposal for "Infrastructure Project" has been submitted successfully.',
-    link: '/proposals/infrastructure-project',
-    linkText: 'View Proposal',
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    read: true,
-    entityType: 'proposal',
-    entityId: 'infrastructure-project'
-  },
-  {
-    id: '4',
-    userId: 'user-2',
-    type: 'info',
-    title: 'New Tender Published',
-    message: 'A new tender "Cultural Heritage Project" has been published.',
-    link: '/tenders/cultural-heritage',
-    linkText: 'View Tender',
-    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    read: false,
-    entityType: 'tender',
-    entityId: 'cultural-heritage'
-  }
-];
-
-// GET /api/notifications
-export async function GET(req: NextRequest) {
+/**
+ * GET /api/notifications
+ * Retrieves notifications for the current user
+ */
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
-    
-    // In a real implementation, we would fetch notifications from the database
-    // For now, we'll filter the mock data
-    const userId = session.user.id;
-    const userNotifications = notificationsDb.filter(n => n.userId === userId);
-    
-    // Sort by creation date (newest first)
-    userNotifications.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    
-    return NextResponse.json(userNotifications);
+
+    // Parse query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const unreadOnly = searchParams.get('unread_only') === 'true';
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const offset = (page - 1) * limit;
+
+    // Start building the query
+    let query = supabase
+      .from('notifications')
+      .select('*', { count: 'exact' })
+      .eq('user_id', user.id);
+
+    // Apply filters
+    if (unreadOnly) {
+      query = query.eq('read', false);
+    }
+
+    // Apply pagination
+    query = query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    // Execute the query
+    const { data: notifications, count, error } = await query;
+
+    if (error) {
+      console.error('Error fetching notifications:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch notifications' },
+        { status: 500 }
+      );
+    }
+
+    // Get unread count
+    const { count: unreadCount, error: countError } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+
+    if (countError) {
+      console.error('Error counting unread notifications:', countError);
+    }
+
+    return NextResponse.json({
+      notifications: notifications || [],
+      unread_count: unreadCount || 0,
+      pagination: {
+        total: count || 0,
+        page,
+        limit,
+        pages: count ? Math.ceil(count / limit) : 0
+      }
+    });
   } catch (error: any) {
-    console.error('Error fetching notifications:', error);
+    console.error('Error in GET /api/notifications:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch notifications' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
 }
 
-// POST /api/notifications
-export async function POST(req: NextRequest) {
+/**
+ * POST /api/notifications
+ * Creates a new notification
+ */
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
-    
-    const body = await req.json();
-    
-    // Validate request body
+
+    // Get user role
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = userProfile?.role === 'admin';
+
+    // Only admins can create notifications for other users
+    const body = await request.json();
+
+    // Validate required fields
     if (!body.title || !body.message || !body.type) {
       return NextResponse.json(
         { error: 'Missing required fields: title, message, type' },
         { status: 400 }
       );
     }
-    
-    // Create new notification
-    const newNotification = {
-      id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      userId: session.user.id,
+
+    // If recipient_id is provided, check if user has permission
+    if (body.recipient_id && body.recipient_id !== user.id && !isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden: Only admins can create notifications for other users' },
+        { status: 403 }
+      );
+    }
+
+    // Generate a unique ID for the notification
+    const notificationId = uuidv4();
+
+    // Prepare notification data
+    const notificationData = {
+      id: notificationId,
+      user_id: body.recipient_id || user.id,
       type: body.type,
       title: body.title,
       message: body.message,
-      link: body.link,
-      linkText: body.linkText,
-      createdAt: new Date().toISOString(),
+      link: body.link || null,
+      link_text: body.link_text || null,
       read: false,
-      entityType: body.entityType,
-      entityId: body.entityId
+      entity_type: body.entity_type || null,
+      entity_id: body.entity_id || null,
+      created_by: user.id,
+      created_at: new Date().toISOString()
     };
-    
-    // In a real implementation, we would save to the database
-    // For now, we'll add to the mock data
-    notificationsDb.push(newNotification);
-    
-    return NextResponse.json(newNotification, { status: 201 });
+
+    // Insert notification into database
+    const { data: notification, error } = await supabase
+      .from('notifications')
+      .insert(notificationData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      return NextResponse.json(
+        { error: 'Failed to create notification', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(notification, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating notification:', error);
+    console.error('Error in POST /api/notifications:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create notification' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
 }
 
-// PUT /api/notifications/mark-read
-export async function PUT(req: NextRequest) {
+/**
+ * PUT /api/notifications
+ * Marks notifications as read
+ */
+export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    const body = await req.json();
-    const userId = session.user.id;
-    
-    // Mark specific notification as read
-    if (body.notificationId) {
-      const notification = notificationsDb.find(
-        n => n.id === body.notificationId && n.userId === userId
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
-      
-      if (!notification) {
+    }
+
+    const body = await request.json();
+
+    // Mark specific notification as read
+    if (body.notification_id) {
+      // Check if notification exists and belongs to user
+      const { data: notification, error: fetchError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('id', body.notification_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: 'Notification not found' },
+            { status: 404 }
+          );
+        }
+
+        console.error('Error fetching notification:', fetchError);
         return NextResponse.json(
-          { error: 'Notification not found' },
-          { status: 404 }
+          { error: 'Failed to fetch notification', details: fetchError.message },
+          { status: 500 }
         );
       }
-      
-      notification.read = true;
-      
+
+      // Update notification
+      const { error: updateError } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', body.notification_id);
+
+      if (updateError) {
+        console.error('Error marking notification as read:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to mark notification as read', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
       return NextResponse.json({ success: true });
     }
-    
+
     // Mark all notifications as read
-    if (body.markAll) {
-      notificationsDb.forEach(notification => {
-        if (notification.userId === userId) {
-          notification.read = true;
-        }
-      });
-      
+    if (body.mark_all) {
+      const { error: updateError } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (updateError) {
+        console.error('Error marking all notifications as read:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to mark all notifications as read', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
       return NextResponse.json({ success: true });
     }
-    
+
     return NextResponse.json(
-      { error: 'Invalid request' },
+      { error: 'Invalid request. Either notification_id or mark_all is required' },
       { status: 400 }
     );
   } catch (error: any) {
-    console.error('Error marking notifications as read:', error);
+    console.error('Error in PUT /api/notifications:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to mark notifications as read' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/notifications
-export async function DELETE(req: NextRequest) {
+/**
+ * DELETE /api/notifications
+ * Deletes notifications
+ */
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
-    
-    const url = new URL(req.url);
+
+    const url = new URL(request.url);
     const notificationId = url.searchParams.get('id');
-    const clearAll = url.searchParams.get('clearAll');
-    const userId = session.user.id;
-    
+    const clearAll = url.searchParams.get('clear_all');
+
     // Delete specific notification
     if (notificationId) {
-      const index = notificationsDb.findIndex(
-        n => n.id === notificationId && n.userId === userId
-      );
-      
-      if (index === -1) {
+      // Check if notification exists and belongs to user
+      const { data: notification, error: fetchError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('id', notificationId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: 'Notification not found' },
+            { status: 404 }
+          );
+        }
+
+        console.error('Error fetching notification:', fetchError);
         return NextResponse.json(
-          { error: 'Notification not found' },
-          { status: 404 }
+          { error: 'Failed to fetch notification', details: fetchError.message },
+          { status: 500 }
         );
       }
-      
-      notificationsDb.splice(index, 1);
-      
+
+      // Delete notification
+      const { error: deleteError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (deleteError) {
+        console.error('Error deleting notification:', deleteError);
+        return NextResponse.json(
+          { error: 'Failed to delete notification', details: deleteError.message },
+          { status: 500 }
+        );
+      }
+
       return NextResponse.json({ success: true });
     }
-    
+
     // Delete all notifications for user
     if (clearAll === 'true') {
-      notificationsDb = notificationsDb.filter(n => n.userId !== userId);
-      
+      const { error: deleteError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        console.error('Error deleting all notifications:', deleteError);
+        return NextResponse.json(
+          { error: 'Failed to delete all notifications', details: deleteError.message },
+          { status: 500 }
+        );
+      }
+
       return NextResponse.json({ success: true });
     }
-    
+
     return NextResponse.json(
-      { error: 'Invalid request' },
+      { error: 'Invalid request. Either id or clear_all=true is required' },
       { status: 400 }
     );
   } catch (error: any) {
-    console.error('Error deleting notifications:', error);
+    console.error('Error in DELETE /api/notifications:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete notifications' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }

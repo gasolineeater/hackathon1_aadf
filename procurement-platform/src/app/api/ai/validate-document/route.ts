@@ -8,8 +8,43 @@ import { storeDocumentValidation } from '@/lib/ai/databaseStorage';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Get user role
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = userProfile?.role === 'admin';
+    const isEvaluator = userProfile?.role === 'evaluator';
+
+    // Only admins and evaluators can validate documents
+    if (!isAdmin && !isEvaluator) {
+      return NextResponse.json(
+        { error: 'Forbidden: Only admins and evaluators can validate documents' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
+    // Check for document_id in the new API format
+    if (body.document_id) {
+      // New API format
+      return await handleNewApiFormat(request, user.id);
+    }
+
+    // Legacy API format
     // Required fields validation
     if (!body.documentType || !body.content) {
       return NextResponse.json(
@@ -30,13 +65,197 @@ export async function POST(request: NextRequest) {
         documentType,
         content,
         validationResult,
-        metadata.documentId
+        metadata.documentId,
+        user.id
       );
+
+      // Create audit log
+      await supabase
+        .from('audit_logs')
+        .insert({
+          action: 'document.validate',
+          resource_type: 'document',
+          resource_id: metadata.documentId,
+          user_id: user.id,
+          details: {
+            document_type: documentType,
+            is_valid: validationResult.isValid
+          }
+        });
     }
 
     return NextResponse.json(validationResult);
   } catch (error: any) {
     console.error('Error validating document:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Handles the new API format for document validation
+ */
+async function handleNewApiFormat(request: NextRequest, userId: string) {
+  try {
+    const body = await request.json();
+
+    // Validate required fields
+    if (!body.document_id) {
+      return NextResponse.json(
+        { error: 'document_id is required' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch document details
+    const { data: document, error: documentError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', body.document_id)
+      .single();
+
+    if (documentError) {
+      if (documentError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Document not found' },
+          { status: 404 }
+        );
+      }
+
+      console.error('Error fetching document:', documentError);
+      return NextResponse.json(
+        { error: 'Failed to fetch document', details: documentError.message },
+        { status: 500 }
+      );
+    }
+
+    // Get document content
+    const { data: fileData, error: fileError } = await supabase.storage
+      .from('documents')
+      .download(document.file_path);
+
+    if (fileError) {
+      console.error('Error downloading document:', fileError);
+      return NextResponse.json(
+        { error: 'Failed to download document', details: fileError.message },
+        { status: 500 }
+      );
+    }
+
+    // Extract text from document
+    let documentText = '';
+    let documentType = 'generic';
+
+    if (document.file_type === 'application/pdf') {
+      // For PDF files, we would use a PDF parsing library
+      // This is a simplified example
+      documentText = 'PDF content would be extracted here';
+    } else if (document.file_type.startsWith('text/')) {
+      // For text files, we can read the content directly
+      documentText = await fileData.text();
+    } else if (document.file_type.includes('word') || document.file_type.includes('office')) {
+      // For Word documents, we would use a Word parsing library
+      // This is a simplified example
+      documentText = 'Word document content would be extracted here';
+    } else {
+      return NextResponse.json(
+        { error: 'Unsupported file type for validation' },
+        { status: 400 }
+      );
+    }
+
+    // Determine document type based on metadata
+    if (document.tender_id) {
+      documentType = 'tender';
+    } else if (document.proposal_id) {
+      documentType = 'proposal';
+    } else if (document.type) {
+      documentType = document.type;
+    }
+
+    // Get validation requirements
+    let requirements = body.requirements;
+
+    if (!requirements && body.tender_id) {
+      // If requirements not provided but tender_id is, get requirements from tender
+      const { data: tender, error: tenderError } = await supabase
+        .from('tenders')
+        .select('requirements')
+        .eq('id', body.tender_id)
+        .single();
+
+      if (!tenderError && tender && tender.requirements) {
+        requirements = tender.requirements;
+      }
+    }
+
+    // Validate document
+    const validationResult = await validateDocument(documentType, documentText, {
+      documentId: body.document_id,
+      requirements
+    });
+
+    // Store validation result
+    const { data: validation, error: validationError } = await supabase
+      .from('document_validations')
+      .insert({
+        document_id: body.document_id,
+        validator_id: userId,
+        validation_type: 'ai',
+        requirements: requirements,
+        result: validationResult,
+        is_valid: validationResult.isValid,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (validationError) {
+      console.error('Error storing validation result:', validationError);
+      return NextResponse.json(
+        { error: 'Failed to store validation result', details: validationError.message },
+        { status: 500 }
+      );
+    }
+
+    // Update document validation status
+    await supabase
+      .from('documents')
+      .update({
+        validation_status: validationResult.isValid ? 'valid' : 'invalid',
+        last_validated_at: new Date().toISOString()
+      })
+      .eq('id', body.document_id);
+
+    // Create audit log
+    const { error: auditError } = await supabase
+      .from('audit_logs')
+      .insert({
+        action: 'document.validate',
+        resource_type: 'document',
+        resource_id: body.document_id,
+        user_id: userId,
+        details: {
+          validation_id: validation.id,
+          is_valid: validationResult.isValid
+        }
+      });
+
+    if (auditError) {
+      console.error('Error creating audit log:', auditError);
+      // Continue anyway, as the validation was completed successfully
+    }
+
+    return NextResponse.json({
+      validation_id: validation.id,
+      document_id: body.document_id,
+      is_valid: validationResult.isValid,
+      validation_result: validationResult
+    });
+  } catch (error: any) {
+    console.error('Error in handleNewApiFormat:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error.message },
       { status: 500 }
