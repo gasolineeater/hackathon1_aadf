@@ -17,49 +17,46 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  
+
   const { signUp } = useAuth();
   const router = useRouter();
-  
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
-    
+
     // Validate passwords match
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
-    
+
     try {
       const { error, user } = await signUp(email, password, {
         fullName,
         organization,
         role,
       });
-      
+
       if (error) {
         setError(error.message);
         return;
       }
-      
+
       // Show success message
-      setSuccessMessage('Account created successfully! You can now sign in.');
-      
-      // Redirect to sign in page after a delay
-      setTimeout(() => {
-        router.push('/auth/signin');
-      }, 3000);
+      setSuccessMessage('Account created successfully! Please check your email to verify your account.');
+
+      // Don't redirect automatically - user needs to verify email first
     } catch (error: any) {
       setError(error.message || 'An error occurred during sign up');
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -101,7 +98,12 @@ export default function SignUp() {
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">{successMessage}</h3>
                   <div className="mt-2 text-sm text-green-700">
-                    <p>Redirecting you to the sign in page...</p>
+                    <p>Please check your email inbox for a verification link. You need to verify your email before you can sign in.</p>
+                  </div>
+                  <div className="mt-4">
+                    <Link href="/auth/signin" className="text-sm font-medium text-[#0056a4] hover:text-[#004483]">
+                      Go to Sign In
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -122,7 +124,7 @@ export default function SignUp() {
                   </div>
                 </div>
               )}
-              
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address

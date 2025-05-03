@@ -14,6 +14,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any | null }>;
   updateProfile: (data: any) => Promise<{ error: any | null }>;
+  resendVerificationEmail: () => Promise<{ error: any | null }>;
+  isEmailVerified: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,17 +24,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       setIsLoading(true);
-      
+
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Check email verification status
+        if (session?.user) {
+          const isVerified = session.user.email_confirmed_at != null;
+          setIsEmailVerified(isVerified);
+        }
       } catch (error) {
         console.error('Error getting initial session:', error);
       } finally {
@@ -47,6 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Check email verification status on auth state change
+        if (session?.user) {
+          const isVerified = session.user.email_confirmed_at != null;
+          setIsEmailVerified(isVerified);
+        } else {
+          setIsEmailVerified(false);
+        }
+
         setIsLoading(false);
       }
     );
@@ -63,11 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
       });
-      
+
       if (!error) {
         router.refresh();
       }
-      
+
       return { error };
     } catch (error) {
       console.error('Error signing in:', error);
@@ -87,9 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             organization: userData.organization,
             role: userData.role || 'vendor', // Default role
           },
+          // Enable email verification
+          emailRedirectTo: `${window.location.origin}/auth/verification-success`,
         },
       });
-      
+
       if (!error) {
         // Create user profile in the database
         const { error: profileError } = await supabase
@@ -103,12 +123,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               organization: userData.organization,
             },
           ]);
-          
+
         if (profileError) {
           console.error('Error creating user profile:', profileError);
           return { error: profileError, user: null };
         }
-        
+
         // If the user is a vendor, create a vendor profile
         if (userData.role === 'vendor') {
           const { error: vendorError } = await supabase
@@ -121,14 +141,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 contact_email: email,
               },
             ]);
-            
+
           if (vendorError) {
             console.error('Error creating vendor profile:', vendorError);
             return { error: vendorError, user: null };
           }
         }
       }
-      
+
       return { error, user: data.user };
     } catch (error) {
       console.error('Error signing up:', error);
@@ -153,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/update-password`,
       });
-      
+
       return { error };
     } catch (error) {
       console.error('Error resetting password:', error);
@@ -171,11 +191,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           organization: data.organization,
         },
       });
-      
+
       if (authError) {
         return { error: authError };
       }
-      
+
       // Update user profile in the database
       const { error: profileError } = await supabase
         .from('users')
@@ -185,10 +205,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           updated_at: new Date().toISOString(),
         })
         .eq('id', user?.id);
-        
+
       return { error: profileError };
     } catch (error) {
       console.error('Error updating profile:', error);
+      return { error };
+    }
+  };
+
+  // Resend verification email
+  const resendVerificationEmail = async () => {
+    try {
+      if (!user?.email) {
+        return { error: new Error('No user email found') };
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email,
+      });
+
+      return { error };
+    } catch (error) {
+      console.error('Error resending verification email:', error);
       return { error };
     }
   };
@@ -202,6 +241,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     resetPassword,
     updateProfile,
+    resendVerificationEmail,
+    isEmailVerified,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -209,10 +250,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 }
