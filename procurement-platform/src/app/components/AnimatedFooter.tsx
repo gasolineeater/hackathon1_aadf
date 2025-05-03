@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function AnimatedFooter() {
   const fadeInUpVariants = {
@@ -109,8 +110,14 @@ export default function AnimatedFooter() {
             variants={fadeInUpVariants}
           >
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#0056a4] font-bold">
-                A
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                <Image 
+                  src="/images/aadf-logo.png" 
+                  alt="AADF Logo" 
+                  width={40} 
+                  height={40}
+                  className="rounded-full"
+                />
               </div>
               <span className="text-xl font-bold text-white">
                 AADF
