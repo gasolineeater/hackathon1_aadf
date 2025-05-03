@@ -10,7 +10,7 @@ export default function AdminDashboard() {
     { name: 'Ongoing Evaluations', value: 8 },
     { name: 'Document Validations', value: 156 },
   ];
-  
+
   // Mock recent activities
   const recentActivities = [
     { id: 1, type: 'tender_created', user: 'Admin User', item: 'Urban Trails Project', time: '2 hours ago' },
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
     { id: 4, type: 'evaluation_completed', user: 'Evaluation Committee', item: 'IT Infrastructure Project', time: '1 day ago' },
     { id: 5, type: 'document_validated', user: 'System', item: 'Financial Offer', time: '1 day ago' },
   ];
-  
+
   // Get icon for activity type
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -65,11 +65,11 @@ export default function AdminDashboard() {
         );
     }
   };
-  
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
-      
+
       {/* Stats */}
       <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
@@ -81,7 +81,7 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
-      
+
       {/* Quick Links */}
       <div className="mt-8">
         <h2 className="text-lg font-medium text-gray-900">Quick Links</h2>
@@ -102,7 +102,24 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
-          
+
+          <Link
+            href="/admin/compatibility"
+            className="bg-white overflow-hidden shadow rounded-lg p-6 hover:bg-gray-50"
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0 bg-[#0056a4] rounded-md p-3">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900">AI Compatibility</h3>
+                <p className="mt-1 text-sm text-gray-500">Match vendors to tenders with AI</p>
+              </div>
+            </div>
+          </Link>
+
           <Link
             href="/admin/document-validation"
             className="bg-white overflow-hidden shadow rounded-lg p-6 hover:bg-gray-50"
@@ -119,7 +136,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
-          
+
           <Link
             href="/admin/evaluation"
             className="bg-white overflow-hidden shadow rounded-lg p-6 hover:bg-gray-50"
@@ -138,7 +155,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </div>
-      
+
       {/* Recent Activity */}
       <div className="mt-8">
         <h2 className="text-lg font-medium text-gray-900">Recent Activity</h2>
