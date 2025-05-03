@@ -17,13 +17,13 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="/tenders"
+                  href="/procurement"
                   className="px-6 py-2 rounded-md bg-white text-[#0056a4] hover:bg-gray-100 transition-colors font-medium"
                 >
                   View Tenders
                 </Link>
                 <Link
-                  href="/submit-proposal"
+                  href="/procurement/1/submit"
                   className="px-6 py-2 rounded-md border border-white text-white hover:bg-[#0067c5] transition-colors font-medium"
                 >
                   Submit a Proposal
@@ -117,6 +117,147 @@ export default function Home() {
                   Advanced AI tools to analyze proposals, detect missing information, and suggest evaluation scores.
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Smart Procurement Platform Section - Added for Hackathon */}
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-[#0056a4] mb-4 inline-block relative">
+                Smart Procurement Platform
+                <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-[#0056a4]"></span>
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto mt-6">
+                Our innovative solution for the AADF Hackathon Challenge
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="p-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+                  <div className="p-8">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">The Challenge</h3>
+                    <p className="text-gray-600 mb-6">
+                      AADF's procurement process involves several steps: Call for Tenders, Receiving Offers,
+                      Evaluation of Offers, Decision-Making, Winner Announcement, and Documenting processes and decisions.
+                      There's a clear need for a tech-powered solution that automates and digitizes this end-to-end
+                      procurement process while ensuring transparency, compliance, and efficiency.
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        Transparency
+                      </span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        Efficiency
+                      </span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        Compliance
+                      </span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        Automation
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="p-1 bg-gradient-to-r from-green-500 to-teal-600"></div>
+                  <div className="p-8">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Solution</h3>
+                    <p className="text-gray-600 mb-6">
+                      We've developed a comprehensive digital platform that streamlines AADF's procurement process
+                      with AI-powered features that enhance decision-making, reduce manual work, and ensure
+                      transparency throughout the entire process.
+                    </p>
+                    <ul className="space-y-3">
+                      <li className="flex items-start">
+                        <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span className="text-gray-700">AI-powered proposal analysis and scoring suggestions</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span className="text-gray-700">Automatic detection of missing information in proposals</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span className="text-gray-700">Digital workflow for the entire procurement process</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span className="text-gray-700">Transparent evaluation system with audit trails</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-16">
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="p-8">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-blue-600">1</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Tender Creation</h4>
+                      <p className="text-gray-600 text-sm">
+                        AADF staff create and publish tenders with detailed requirements and evaluation criteria
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-blue-600">2</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Proposal Submission</h4>
+                      <p className="text-gray-600 text-sm">
+                        Vendors submit proposals through the platform with all required documentation
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-blue-600">3</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">AI Analysis</h4>
+                      <p className="text-gray-600 text-sm">
+                        Our AI analyzes proposals, detects missing information, and suggests evaluation scores
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl font-bold text-blue-600">4</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Decision & Award</h4>
+                      <p className="text-gray-600 text-sm">
+                        Committee evaluates proposals with AI assistance and selects the winning vendor
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-12 text-center">
+              <Link
+                href="/dashboard"
+                className="inline-block px-8 py-3 rounded-md bg-[#0056a4] text-white hover:bg-[#004483] transition-colors font-medium"
+              >
+                Explore the Platform
+              </Link>
             </div>
           </div>
         </section>
