@@ -1,12 +1,6 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AnimationProvider from "./components/AnimationProvider";
-import CustomCursor from "./components/CustomCursor";
-import PremiumLoader from "./components/PremiumLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,26 +22,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Disable the loader in development mode for faster refresh
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      setIsLoading(false);
-    }
-  }, []);
-
   return (
     <html lang="en" className="!scroll-smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {isLoading && <PremiumLoader onLoadComplete={() => setIsLoading(false)} />}
-
-        <AnimationProvider>
-          {children}
-          <CustomCursor />
-        </AnimationProvider>
+        {children}
       </body>
     </html>
   );
