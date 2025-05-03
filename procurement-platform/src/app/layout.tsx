@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { ToastProvider } from "./context/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import JudgeHelper from "./components/JudgeHelper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-grow">{children}</main>
             <Footer />
+            <JudgeHelper />
           </ToastProvider>
         </AuthProvider>
       </body>
