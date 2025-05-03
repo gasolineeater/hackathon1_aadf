@@ -34,46 +34,26 @@ export default function Navbar() {
           </Link>
 
           <nav className="hidden md:flex space-x-8">
-            <div className="relative group">
-              <button className="text-gray-700 hover:text-[#0056a4] font-medium transition-colors py-2">
-                About
-              </button>
-              <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden transform scale-0 group-hover:scale-100 opacity-0 group-hover:opacity-100 transition-all duration-200 origin-top-left z-50">
-                <Link href="/about" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Our Story & Approach
-                </Link>
-                <Link href="/about/what-we-do" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  What we do
-                </Link>
-                <Link href="/about/who-we-are" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Who we are
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/about"
+              className="text-gray-700 hover:text-[#0056a4] font-medium transition-colors py-2"
+            >
+              About
+            </Link>
 
             <Link
-              href="/tenders"
+              href="/projects"
               className="text-gray-700 hover:text-[#0056a4] font-medium transition-colors py-2"
             >
               Projects
             </Link>
 
-            <div className="relative group">
-              <button className="text-gray-700 hover:text-[#0056a4] font-medium transition-colors py-2">
-                Opportunities
-              </button>
-              <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden transform scale-0 group-hover:scale-100 opacity-0 group-hover:opacity-100 transition-all duration-200 origin-top-left z-50">
-                <Link href="/tenders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Procurement
-                </Link>
-                <Link href="/careers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Careers
-                </Link>
-                <Link href="/calls" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Open Calls
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/opportunities"
+              className="text-gray-700 hover:text-[#0056a4] font-medium transition-colors py-2"
+            >
+              Opportunities
+            </Link>
 
             <Link
               href="/news"
