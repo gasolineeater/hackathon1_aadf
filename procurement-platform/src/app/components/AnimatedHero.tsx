@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { gsap } from 'gsap';
+import ParticleBackground from './ParticleBackground';
+import PremiumButton from './PremiumButton';
+import PremiumCard from './PremiumCard';
 
 export default function AnimatedHero() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -12,18 +14,23 @@ export default function AnimatedHero() {
   const buttonRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Parallax effect on scroll
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 500], [0, 150]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Create a timeline for the hero animation
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-      
+
       // Animate the hero background
       tl.fromTo(
         heroRef.current,
         { backgroundPosition: '0% 100%' },
         { backgroundPosition: '0% 0%', duration: 2.5, ease: 'power2.out' }
       );
-      
+
       // Animate the text
       tl.fromTo(
         textRef.current?.querySelectorAll('p, h1'),
@@ -31,15 +38,15 @@ export default function AnimatedHero() {
         { y: 0, opacity: 1, stagger: 0.2, duration: 0.8 },
         '-=2'
       );
-      
+
       // Animate the buttons
       tl.fromTo(
-        buttonRef.current?.querySelectorAll('a'),
+        buttonRef.current?.querySelectorAll('button'),
         { y: 20, opacity: 0 },
         { y: 0, opacity: 1, stagger: 0.15, duration: 0.6 },
         '-=1'
       );
-      
+
       // Animate the card
       tl.fromTo(
         cardRef.current,
@@ -48,15 +55,23 @@ export default function AnimatedHero() {
         '-=1'
       );
     });
-    
+
     return () => ctx.revert();
   }, []);
 
   return (
-    <section 
+    <section
       ref={heroRef}
       className="relative bg-gradient-to-b from-[#0056a4] to-[#003b70] text-white overflow-hidden"
     >
+      {/* Particle background */}
+      <ParticleBackground
+        color="#ffffff"
+        particleCount={80}
+        speed={0.3}
+        opacity={0.3}
+      />
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10">
@@ -71,7 +86,7 @@ export default function AnimatedHero() {
                 left: `${Math.random() * 100}%`,
               }}
               initial={{ opacity: 0, scale: 0 }}
-              animate={{ 
+              animate={{
                 opacity: [0, 0.5, 0],
                 scale: [0, 1, 1.5],
                 x: [0, Math.random() * 100 - 50],
@@ -87,69 +102,68 @@ export default function AnimatedHero() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 relative z-10">
+      <motion.div
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 relative z-10"
+        style={{ y, opacity }}
+      >
         <div className="md:flex md:items-center md:justify-between">
           {/* Left side - Text and buttons */}
           <div className="md:w-1/2 mb-10 md:mb-0 md:pr-8">
             <div ref={textRef}>
-              <motion.h1 
-                className="text-4xl md:text-5xl font-bold leading-tight mb-6"
+              <motion.h1
+                className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gradient"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 A Digital Solution for AADF's Procurement Process
               </motion.h1>
-              <motion.p 
+              <motion.p
                 className="text-xl text-gray-100 mb-8 max-w-2xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
-                Streamlining the end-to-end procurement workflow with 
+                Streamlining the end-to-end procurement workflow with
                 transparency, compliance, and efficiency at its core.
               </motion.p>
             </div>
             <div ref={buttonRef} className="flex flex-col sm:flex-row gap-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <PremiumButton
+                href="/procurement"
+                variant="secondary"
+                size="lg"
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                }
               >
-                <Link
-                  href="/procurement"
-                  className="px-6 py-3 rounded-md bg-white text-[#0056a4] hover:bg-gray-100 transition-colors text-lg font-medium inline-block"
-                >
-                  View Tenders
-                </Link>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                View Tenders
+              </PremiumButton>
+
+              <PremiumButton
+                href="/procurement/1/submit"
+                variant="outline"
+                size="lg"
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                }
               >
-                <Link
-                  href="/procurement/1/submit"
-                  className="px-6 py-3 rounded-md border border-white text-white hover:bg-[#0067c5] transition-colors text-lg font-medium inline-block"
-                >
-                  Submit a Proposal
-                </Link>
-              </motion.div>
+                Submit a Proposal
+              </PremiumButton>
             </div>
           </div>
 
           {/* Right side - Login card */}
           <div ref={cardRef} className="md:w-1/2 flex justify-center">
-            <motion.div
-              className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-              whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+            <PremiumCard
+              hoverEffect="tilt"
+              className="w-full max-w-md"
+              variant="default"
+              padding="none"
             >
               <div className="p-6 bg-[#f8f9fa]">
                 <div className="flex items-center space-x-3 mb-4">
@@ -168,27 +182,33 @@ export default function AnimatedHero() {
                 </p>
               </div>
               <div className="p-6">
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
+                <PremiumButton
+                  href="/login"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  }
                 >
-                  <Link
-                    href="/login"
-                    className="w-full block text-center px-6 py-3 rounded-md bg-[#0056a4] text-white hover:bg-[#004483] transition-colors text-lg font-medium"
-                  >
-                    Log In
-                  </Link>
-                </motion.div>
+                  Log In
+                </PremiumButton>
                 <div className="mt-4 text-center">
-                  <Link href="/register" className="text-[#0056a4] hover:underline text-sm">
+                  <PremiumButton
+                    href="/register"
+                    variant="ghost"
+                    size="sm"
+                  >
                     Register as a new vendor
-                  </Link>
+                  </PremiumButton>
                 </div>
               </div>
-            </motion.div>
+            </PremiumCard>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Animated wave at the bottom */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden">

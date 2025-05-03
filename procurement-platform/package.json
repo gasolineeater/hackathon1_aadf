@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/aos": "^3.0.7",
     "aos": "^2.3.4",
     "framer-motion": "^12.9.4",
     "gsap": "^3.13.0",
