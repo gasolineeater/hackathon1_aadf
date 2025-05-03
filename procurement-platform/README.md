@@ -68,9 +68,28 @@ yarn dev
 
 - **Home**: [http://localhost:3000](http://localhost:3000)
 - **Tenders**: [http://localhost:3000/tenders](http://localhost:3000/tenders)
-- **Submit Proposal**: [http://localhost:3000/submit-proposal](http://localhost:3000/submit-proposal)
-- **Login**: [http://localhost:3000/login](http://localhost:3000/login)
+- **Submit Proposal**: [http://localhost:3000/tenders/[id]/submit-proposal](http://localhost:3000/tenders/[id]/submit-proposal)
+- **Login**: [http://localhost:3000/auth/signin](http://localhost:3000/auth/signin)
 - **Dashboard** (after login): [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
+- **Admin Portal**: [http://localhost:3000/admin](http://localhost:3000/admin)
+- **Document Validation**: [http://localhost:3000/admin/document-validation](http://localhost:3000/admin/document-validation)
+- **AI Compatibility**: [http://localhost:3000/admin/compatibility](http://localhost:3000/admin/compatibility)
+
+### Admin Access
+
+For the hackathon presentation, I've added:
+
+- A dedicated admin portal at `/admin`
+- Document validation at `/admin/document-validation`
+- AI compatibility analysis at `/admin/compatibility`
+- A helper widget for judges to easily access admin features
+
+You can access the admin features using:
+
+- **Email**: admin@aadf.org
+- **Password**: admin123
+
+The admin portal provides access to all administrative functions, including tender management, proposal evaluation, document validation, and AI-powered analysis. The helper widget appears in the bottom-right corner of the screen in development mode to provide quick access to these features.
 
 ### Building for Production
 
@@ -92,12 +111,18 @@ yarn start
 
 ## Project Structure
 
-- `/src/app`: Main application code
+- `/src/app`: Main application code (Next.js App Router)
   - `/components`: Reusable UI components
-  - `/lib`: Utility functions and shared code
+  - `/admin`: Admin portal pages
+  - `/auth`: Authentication pages
+  - `/dashboard`: Dashboard pages
+  - `/tenders`: Tender management pages
   - `/api`: API routes
-  - `/models`: Data models and types
-  - `/pages`: Application pages and routes
+- `/src/contexts`: React context providers
+- `/src/hooks`: Custom React hooks
+- `/src/lib`: Utility functions and shared code
+- `/src/types`: TypeScript type definitions
+- `/database`: Database schema and migrations
 
 ## Procurement Workflow
 
@@ -109,19 +134,42 @@ The platform supports the following workflow:
 5. Winner Announcement
 6. Documenting processes and decisions
 
-## Application Screenshots
+## Key Features in Detail
 
-### Homepage
-The homepage provides an overview of the platform's features and benefits.
+### Tender Management
+- **Create and Publish Tenders**: AADF staff can create, edit, and publish tenders with detailed requirements
+- **Deadline Management**: Set and manage submission deadlines with automatic status updates
+- **Document Attachments**: Attach and manage tender-related documents with version control
 
-### Tenders Page
-The tenders page displays all active procurement opportunities with filtering options.
+### Proposal Management
+- **Secure Submission**: Vendors can submit proposals securely through the platform
+- **Automatic Organization**: Proposals are automatically organized and kept hidden until the deadline
+- **Digital Information Collection**: Structured forms ensure all required information is collected
 
-### Proposal Submission
-Vendors can submit detailed proposals through a comprehensive form.
+### Evaluation System
+- **Transparent Scoring**: Evaluators can score proposals based on predefined criteria
+- **Collaborative Evaluation**: Multiple evaluators can provide scores and comments
+- **AI-Assisted Evaluation**: AI suggests evaluation scores based on preset criteria
 
-### Dashboard
-Authenticated users can manage tenders, evaluate proposals, and generate reports.
+### AI-Powered Features
+- **Document Validation**: AI detects missing information in documents
+- **Vendor-Tender Compatibility**: AI matches vendors to tenders based on compatibility
+- **Proposal Analysis**: AI analyzes proposals for completeness and quality
+
+### Centralized Dashboard
+- **Approval Tracking**: Track approvals and decisions in a centralized dashboard
+- **Status Monitoring**: Monitor the status of all tenders and proposals
+- **Activity Tracking**: Track all activities related to tenders and proposals
+
+### Reporting and Documentation
+- **Automated Report Generation**: Generate final reports automatically
+- **Version Control**: Track changes for sensitive documents
+- **Audit Trail**: Maintain a complete audit trail of all actions
+
+### Security and Compliance
+- **Role-Based Access Control**: Different user roles have different access levels
+- **Data Protection**: Secure storage and transmission of sensitive information
+- **Compliance Checks**: Ensure compliance with procurement regulations
 
 ## Hackathon Challenge
 
