@@ -1,15 +1,109 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export default function Navbar() {
+  const { user, signOut } = useAuth();
+  const { isAdmin, isEvaluator, isVendor } = useRoleAccess();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Close the profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('#profile-menu-button') && !target.closest('#profile-menu')) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <header className="bg-white sticky top-0 z-50">
-      {/* Top bar with login */}
+      {/* Top bar with login/profile */}
       <div className="bg-gray-50 py-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end items-center text-sm">
-          <Link href="/login" className="text-gray-600 hover:text-[#0056a4] text-sm">
-            Log In
-          </Link>
+          {user ? (
+            <div className="relative">
+              <button
+                id="profile-menu-button"
+                className="flex items-center text-gray-600 hover:text-[#0056a4] text-sm"
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              >
+                <span className="mr-1">{user.user_metadata?.full_name || user.email}</span>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isProfileMenuOpen && (
+                <div
+                  id="profile-menu"
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200"
+                >
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                  >
+                    Your Profile
+                  </Link>
+
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+
+                  {isEvaluator && (
+                    <Link
+                      href="/admin/evaluation"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Evaluation Dashboard
+                    </Link>
+                  )}
+
+                  {isVendor && (
+                    <Link
+                      href="/procurement"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      My Proposals
+                    </Link>
+                  )}
+
+                  <button
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => {
+                      signOut();
+                      setIsProfileMenuOpen(false);
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/auth/signin" className="text-gray-600 hover:text-[#0056a4] text-sm">
+              Sign In
+            </Link>
+          )}
         </div>
       </div>
 
