@@ -1,5 +1,6 @@
 import React from 'react';
-import Footer from './Footer';
+import AnimatedNavbar from './AnimatedNavbar';
+import AnimatedFooter from './AnimatedFooter';
 
 interface HomeLayoutProps {
   children: React.ReactNode;
@@ -8,8 +9,9 @@ interface HomeLayoutProps {
 export default function HomeLayout({ children }: HomeLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
+      <AnimatedNavbar />
       <main className="flex-grow">{children}</main>
-      <Footer />
+      <AnimatedFooter />
     </div>
   );
 }
