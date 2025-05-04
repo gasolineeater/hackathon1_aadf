@@ -47,7 +47,7 @@ export default function SignIn() {
           <Link href="/">
             <div className="flex items-center">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="AADF Logo"
                 width={60}
                 height={60}

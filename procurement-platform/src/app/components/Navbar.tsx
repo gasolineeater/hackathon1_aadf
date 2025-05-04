@@ -101,8 +101,8 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Link href="/auth/signin" className="text-gray-600 hover:text-[#0056a4] text-sm">
-              Sign In
+            <Link href="/admin" className="text-gray-600 hover:text-[#0056a4] text-sm">
+              Admin Dashboard
             </Link>
           )}
         </div>
@@ -133,45 +133,55 @@ export default function Navbar() {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center">
             <div className="flex space-x-8">
-              <Link
-                href="/about"
+              <a
+                href="https://www.aadf.org/our-story-approach/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-700 hover:text-[#0056a4] font-medium text-sm transition-colors py-2 relative group"
               >
                 About
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0056a4] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              </a>
 
-              <Link
-                href="/projects"
+              <a
+                href="https://www.aadf.org/project/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-700 hover:text-[#0056a4] font-medium text-sm transition-colors py-2 relative group"
               >
                 Projects
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0056a4] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              </a>
 
-              <Link
-                href="/opportunities"
+              <a
+                href="https://www.aadf.org/tender/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-700 hover:text-[#0056a4] font-medium text-sm transition-colors py-2 relative group"
               >
                 Opportunities
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0056a4] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              </a>
 
-              <Link
-                href="/news"
+              <a
+                href="https://www.aadf.org/news/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-700 hover:text-[#0056a4] font-medium text-sm transition-colors py-2 relative group"
               >
                 News
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0056a4] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              </a>
 
-              <Link
-                href="/contact"
+              <a
+                href="https://www.aadf.org/contact/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-700 hover:text-[#0056a4] font-medium text-sm transition-colors py-2 relative group"
               >
                 Contact
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0056a4] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              </a>
             </div>
           </nav>
 
